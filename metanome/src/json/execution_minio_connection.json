@@ -1,0 +1,7 @@
+{
+	"type":"ConfigurationSettingMinIOConnection",
+	"id":1,
+	"url":"address",
+	"key":"key",
+	"secretKey":"secretKey"
+}

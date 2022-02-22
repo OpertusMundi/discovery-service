@@ -1,0 +1,9 @@
+{
+    "type":"minIOInput",
+    "id":1,
+    "name":"object; bucket; address; key",
+    "objectName":"object",
+    "bucketName":"data",
+    "minIOConnection": null,
+    "comment":"empty"
+}

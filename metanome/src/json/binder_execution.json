@@ -1,0 +1,29 @@
+{
+  "algorithmId": 1,
+  "executionIdentifier": "unique_id",
+  "requirements": [{
+    "type": "ConfigurationRequirementString",
+    "identifier": "TEMP_FOLDER_PATH",
+    "required": true,
+    "numberOfSettings": 1,
+    "minNumberOfSettings": 1,
+    "maxNumberOfSettings": 1,
+    "settings": [{
+      "type": "ConfigurationSettingString",
+      "value": "BINDER_temp"
+    }],
+    "defaultValues": ["BINDER_temp"]
+  }, {
+    "type": "ConfigurationRequirementRelationalInput",
+    "identifier": "INPUT_FILES",
+    "required": true,
+    "numberOfSettings": -1,
+    "minNumberOfSettings": -1,
+    "maxNumberOfSettings": -1,
+    "settings": []
+  }],
+  "cacheResults": true,
+  "writeResults": false,
+  "countResults": false,
+  "memory": "1000"
+}
