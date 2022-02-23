@@ -5,9 +5,11 @@ from minio import Minio
 
 minio_client = None
 
+
 def get_client():
     global minio_client
-    if minio_client==None:
+
+    if minio_client is None:
         settings = get_s3_settings()
         minio_client = Minio(
             settings['client_kwargs']['endpoint_url'].split('//')[-1],
@@ -16,6 +18,7 @@ def get_client():
             secure=False
         )
     return minio_client
+
 
 def get_s3_settings():
     return {

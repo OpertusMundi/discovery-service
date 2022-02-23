@@ -22,7 +22,7 @@ RUN wget https://dl.min.io/client/mc/release/linux-amd64/archive/mc.RELEASE.2022
 RUN chmod +x /usr/local/bin/mc
 
 # Install python deps
-COPY ./requirements.txt /requirements.txt
+COPY requirements.txt /
 RUN pip3 install -r /requirements.txt
 
 ## Because Sherlock is a special cookie, we have to install it manually
@@ -33,5 +33,5 @@ RUN pip3 install -r /requirements.txt
 #RUN python -c 'from sherlock.features import preprocessing; preprocessing.prepare_feature_extraction()'
 
 # Copy run script
-ADD ./start.sh ./start
-RUN chmod a+x ./start
+COPY start.sh /
+RUN chmod a+x start.sh
