@@ -12,3 +12,4 @@ valentine==0.1.4
 celery==5.2.3
 # flower
 flower==1.0.0
+redis==4.1.2

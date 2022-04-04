@@ -3,27 +3,7 @@ import os
 from minio import Minio
 
 
-minio_client = None
-
-
-def get_client():
-    global minio_client
-
-    if minio_client is None:
-        settings = get_s3_settings()
-        minio_client = Minio(
-            settings['client_kwargs']['endpoint_url'].split('//')[-1],
-            access_key=settings['key'],
-            secret_key=settings['secret'],
-            secure=False
-        )
-    return minio_client
-
-
-def get_s3_settings():
-    return {
-      "key": os.environ["MINIO_ROOT_USER"],
-      "secret": os.environ["MINIO_ROOT_PASSWORD"],
-      "client_kwargs": {"endpoint_url":f"http://{os.environ['MINIO_ADDRESS']}"},
-      "default_bucket": os.environ['MINIO_DEFAULT_BUCKET']
-    }
+minio_client: Minio = Minio(f"{os.environ['MINIO_HOST']}:{os.environ['MINIO_PORT']}",
+                            access_key=os.environ['MINIO_ACCESS_KEY'],
+                            secret_key=os.environ['MINIO_SECRET_KEY'],
+                            secure=False)

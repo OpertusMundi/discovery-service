@@ -34,7 +34,6 @@ services:
       - "443:443"
     depends_on:
       - mongo
-      - elastic
       - neo4j
       - minio
     volumes:
@@ -79,6 +78,14 @@ services:
       - rabbitmq
       - celery-worker
 
+  redis:
+    image: redis:latest
+    env_file:
+      - .env
+    command: redis-server --requirepass redis --maxmemory 512mb
+    ports:
+      - "6379:6379"
+
   # Profiler which determines the primary-key foreign-key constraints
   metanome:
    # base_image: # Only supported in docker-compose 3.9...
@@ -118,4 +125,3 @@ volumes:
   miniodata:
   mongodbdata:
   neo4jdata:
-  elasticdata:

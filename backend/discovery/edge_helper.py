@@ -5,6 +5,7 @@ def create_subsumption_relation(source):
     with neo.get_client().session() as session:
         relation = session.write_transaction(_create_subsumption_relation, source)
 
+
 def create_relation(from_node_id, to_node_id, relation_name):
     with neo.get_client().session() as session:
         relation = session.write_transaction(_create_relation, from_node_id, to_node_id, relation_name)
@@ -28,25 +29,29 @@ def delete_relations_by_name(relation_name):
 
 
 def _create_subsumption_relation(tx, source):
-    tx_result = tx.run("MATCH (a:Node), (b:Node) "
-                       "WHERE a.source_name = $source AND b.source_name = $source AND NOT(a.id = b.id) "
-                       f"CREATE (a)-[s:{relation_types.SIBLING}]->(b) "
+    tx_result = tx.run("MATCH (a:Node {source_path: $source}) WITH a "
+                       "MATCH (b:Node {source_path: $source}) "
+                       "WHERE NOT(a.id = b.id) "
+                       f"MERGE (a)-[s:{relation_types.SIBLING}]-(b) "
                        "RETURN type(s) as relation", source=source)
+
     result = []
     for record in tx_result:
         result.append(record['relation'])
     return result
 
+
 def _create_relation(tx, a_id, b_id, relation_name):
-    tx_result = tx.run("MATCH (a:Node), (b:Node) "
-                       "WHERE a.id = $a_id AND b.id = $b_id "
-                       f"MERGE (a)-[r:{relation_name}]->(b) "
+    tx_result = tx.run("MATCH (a:Node {id: $a_id}) WITH a "
+                       "MATCH (b:Node {id: $b_id}) "
+                       f"MERGE (a)-[r:{relation_name}]-(b) "
                        "RETURN r as relation", a_id=a_id, b_id=b_id)
     
     result = []
     for record in tx_result:
         result.append(record['relation'])
     return result
+
 
 def _set_properties(tx, a_id, b_id, relation_name, **kwargs):
     set_query = 'SET '

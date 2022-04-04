@@ -3,16 +3,13 @@ from ..clients import minio
 from ..clients import dask
 
 
-def get_tables():
-    objects = minio.get_client().list_objects(minio.get_s3_settings()['default_bucket'], recursive=True)
+def get_tables(bucket):
+    objects = minio.minio_client.list_objects(bucket, recursive=True)
     return [o.object_name for o in objects]
 
 
-def get_ddf(path):
-    settings = minio.get_s3_settings()
-
-    minio_path = f"s3://{settings['default_bucket']}/{path}"
-    del settings['default_bucket']
+def get_ddf(bucket, path):
+    minio_path = f"s3://{bucket}/{path}"
 
     ddf = dd.read_csv(
         minio_path,
@@ -24,7 +21,6 @@ def get_ddf(path):
         quotechar='"',
         escapechar='\\',
         # on_bad_lines='warn', # For some reason Dask doesn't like this keyword parameter all of a sudden, even though it is supported!
-        storage_options=settings,  # Use s3 style paths for minio
     )
 
     return ddf

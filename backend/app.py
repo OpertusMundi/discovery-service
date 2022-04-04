@@ -8,16 +8,18 @@ import requests
 from flask import Response
 from flask import request, make_response, Flask
 
-from celery import group
+from celery import group, chord
 
 # Import own modules
 from backend import app, celery
 from backend import discovery
 from backend import profiling
 from backend import search
+from backend.discovery import relation_types
+from backend.profiling.valentine import process_match
 from backend.utility.display import log_format
 from backend.utility.parsing import parse_binder_results
-from backend.utility.process_tables import add_table
+from backend.utility.celery_tasks import add_table, profile_valentine_all
 
 # Display/logging settings
 logging.basicConfig(format=log_format, level=logging.INFO)
@@ -28,18 +30,16 @@ def index():
     return '"I live... Again"'
 
 
-@app.route('/start')
-def start():
-    tables = []
-
-    group_tasks = []
-    for table_path in search.io_tools.get_tables():
+@app.route('/ingest-data/<path:bucket>')
+def ingest_data(bucket):
+    header = []
+    for table_path in search.io_tools.get_tables(bucket):
         if not search.mongo_tools.get_table(table_path):
-            group_tasks.append(add_table.s(table_path))
-            tables.append(table_path)
+            header.append(add_table.s(bucket, table_path))
         else:
             logging.info(f"Table {table_path} was already processed!")
-    group(group_tasks).apply_async()
+
+    chord(header)(profile_valentine_all.si(bucket))
     return Response('Success', 200)
 
 
@@ -92,15 +92,16 @@ def profile_valentine():
     df2 = search.io_tools.get_ddf(table2_path).head(10000)
     matches = profiling.valentine.match(df1, df2)
 
-    # TODO: can potentially move this into the valentine helper module
+    process_match(table1_path, table2_path, matches)
+
     threshold = float(os.environ['VALENTINE_THRESHOLD'])
-    node_ids_t1 = search.mongo_tools.get_node_ids(table1_path)
-    node_ids_t2 = search.mongo_tools.get_node_ids(table2_path)
-    for ((_, col_from), (_, col_to)), similarity in matches.items():
-        if similarity > threshold:
-            discovery.crud.create_relation(node_ids_t1[col_from], node_ids_t2[col_to], discovery.relation_types.MATCH)
-            discovery.crud.set_relation_properties(node_ids_t1[col_from], node_ids_t2[col_to],
-                                                   discovery.relation_types.MATCH, coma=similarity)
+    # node_ids_t1 = search.mongo_tools.get_node_ids(table1_path)
+    # node_ids_t2 = search.mongo_tools.get_node_ids(table2_path)
+    # for ((_, col_from), (_, col_to)), similarity in matches.items():
+    #     if similarity > threshold:
+    #         discovery.crud.create_relation(node_ids_t1[col_from], node_ids_t2[col_to], relation_types.MATCH)
+    #         discovery.crud.set_relation_properties(node_ids_t1[col_from], node_ids_t2[col_to],
+    #                                                relation_types.MATCH, coma=similarity)
 
     return str(f"Successfully profiled {table1_path} and {table2_path} with threshold {threshold}!")
 
