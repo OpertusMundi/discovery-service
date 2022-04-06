@@ -113,7 +113,7 @@ def _get_related_nodes(tx, node_id):
 
 def _create_node(tx, source, source_path, label):
     tx_result = tx.run("CREATE (n:Node) "
-                       "SET n.id = $source + '/' + $label, "
+                       "SET n.id = $source_path + '/' + $label, "
                        "n.name = $label, "
                        "n.source_name = $source, "
                        "n.source_path = $source_path "

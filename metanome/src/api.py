@@ -15,9 +15,10 @@ app.debug = True
 app.secret_key = os.urandom(24)
 
 
-MINIO_ADDRESS = os.environ["MINIO_ADDRESS"]
-MINIO_ROOT_USER = os.environ["MINIO_ROOT_USER"]
-MINIO_ROOT_PASSWORD = os.environ["MINIO_ROOT_PASSWORD"]
+MINIO_HOST = os.environ["MINIO_HOST"]
+MINIO_PORT = os.environ["MINIO_PORT"]
+MINIO_ACCESS_KEY = os.environ["MINIO_ACCESS_KEY"]
+MINIO_SECRET_KEY = os.environ["MINIO_SECRET_KEY"]
 MINIO_DEFAULT_BUCKET = os.environ["MINIO_DEFAULT_BUCKET"]
 METANOME_ADDRESS = os.environ["METANOME_ADDRESS"]
 
@@ -30,9 +31,9 @@ def index():
 @app.route("/run_binder")
 def run_binder():
     minio_connection = mn.create_minio_connection(
-        f"http://{MINIO_ADDRESS}", 
-        MINIO_ROOT_USER, 
-        MINIO_ROOT_PASSWORD
+        f"http://{MINIO_HOST}:{MINIO_PORT}",
+        MINIO_ACCESS_KEY,
+        MINIO_SECRET_KEY
     )
     res_minio_connection = requests.post(f"http://{METANOME_ADDRESS}/api/minio-connections/store", json=minio_connection).json()
 

@@ -22,6 +22,7 @@ def delete_relation_between_nodes(from_node_id, to_node_id, relation_name):
                                              relation_name)
     return relation
 
+
 def delete_relations_by_name(relation_name):
     with neo.get_client().session() as session:
         relations = session.write_transaction(_delete_relations_by_name, relation_name)

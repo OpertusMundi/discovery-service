@@ -39,5 +39,6 @@ def set_relation_properties(from_node_id, to_node_id, relation_name, **kwargs):
 def delete_relation_between_nodes(from_node_id, to_node_id, relation_name):
     return edge_helper.delete_relation_between_nodes(from_node_id, to_node_id, relation_name)
 
+
 def delete_relations_by_name(relation_name):
     return edge_helper.delete_relations_by_name(relation_name)

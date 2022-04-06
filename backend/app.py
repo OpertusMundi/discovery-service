@@ -48,7 +48,7 @@ def purge():
     # search.es_tools.init_indices(purge=True)
     search.mongo_tools.purge()
     discovery.crud.delete_all_nodes()
-    return "Purged successfully!"
+    return Response('Success', 200)
 
 
 # TODO: metanome runs for all tables at once, consider running it only for specific tables
@@ -68,15 +68,13 @@ def profile_metanome():
     logging.info("Parsing obtained results from metanome...")
     constraints = parse_binder_results(binder_data)
 
-    logging.info("Purging old metanome constraints...")
-    discovery.crud.delete_relations_by_name(discovery.relation_types.FOREIGN_KEY_METANOME)
-
-    logging.info("Adding new metanome constraints to neo4j...")
+    logging.info("Adding metanome constraints to neo4j...")
     for constraint in constraints:
+        print(constraint)
         relation = discovery.crud.create_relation(constraint[0], constraint[1],
                                                   discovery.relation_types.FOREIGN_KEY_METANOME)
 
-    return "Successfully profiled all tables!"
+    return Response('Success', 200)
 
 
 # Expected JSON format:
