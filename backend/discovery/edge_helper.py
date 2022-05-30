@@ -30,6 +30,18 @@ def delete_relations_by_name(relation_name):
     return relations
 
 
+def get_related_relations():
+    with neo.get_client().session() as session:
+        relations = session.write_transaction(_get_related_relations)
+    return relations
+
+
+def delete_relation_by_id(relation_id):
+    with neo.get_client().session() as session:
+        result = session.write_transaction(_delete_relation_by_id, relation_id)
+    return result
+
+
 def _create_subsumption_relation(tx, source):
     tx_result = tx.run("MATCH (a:Node {source_path: $source}) WITH a "
                        "MATCH (b:Node {source_path: $source}) "
@@ -78,3 +90,17 @@ def _delete_relation_between_nodes(tx, node_id1, node_id2, relation_name):
 def _delete_relations_by_name(tx, relation_name):
     result = tx.run("MATCH (a)-[r]->(b) WHERE type(r) = $relation_name DELETE r", relation_name=relation_name)
     return result.single()
+
+
+def _get_related_relations(tx):
+    tx_result = tx.run("match (n)-[r:RELATED]-(m) return [count(r.coma), r] as result")
+
+    result = []
+    for record in tx_result:
+        result.append(record['result'])
+    return result
+
+
+def _delete_relation_by_id(tx, relation_id):
+    tx_result = tx.run("match ()-[r]-() where id(r)=$relation_id delete r", relation_id=relation_id)
+    return tx_result.single()

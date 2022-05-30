@@ -53,13 +53,28 @@ def get_joinable(table_name):
     for sib in siblings:
         # Get all the nodes connected to a sibling via RELATED edge
         related_nodes = node_helper.get_joinable(sib['id'])
-        print(related_nodes)
+        # If the node has connection, transform the result into something useful for us
+        # { table_name: {PK: { from_id: <id>, to_id: <id> }, RELATED: <threshold>} ... }
         if len(related_nodes) > 0:
             tables = process_relation(related_nodes)
             joinable_tables = joinable_tables + tables
 
     print(joinable_tables)
     return joinable_tables
+
+
+def delete_spurious_connections():
+    # Get all relations ([ [nr of coma properties, relations] ])
+    relations = edge_helper.get_related_relations()
+    # Filter out the relations with coma (aka Valentine matcher) property
+    no_match_relations = list(map(lambda x: x[1], filter(lambda x: x[0] == 0, relations)))
+    # For each relation, get the id and delete it
+    ids = []
+    for relation in no_match_relations:
+        ids.append(relation.id)
+        edge_helper.delete_relation_by_id(relation.id)
+    return ids
+
 
 def get_siblings(node_id):
     return node_helper.get_siblings(node_id)

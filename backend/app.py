@@ -15,6 +15,7 @@ from backend import discovery
 from backend import profiling
 from backend import search
 from backend.discovery import relation_types
+from backend.discovery.queries import delete_spurious_connections
 from backend.profiling.valentine import process_match
 from backend.utility.celery_tasks import add_table, profile_valentine_all
 from backend.utility.display import log_format
@@ -74,6 +75,14 @@ def profile_metanome():
                                                from_id=constraint[0], to_id=constraint[1])
 
     return Response('Success', 200)
+
+
+@app.route('/filter-connections', methods=['GET'])
+def filter_connections():
+    deleted_relations = delete_spurious_connections()
+    if len(deleted_relations) == 0:
+        return Response("No relationships affected", status=200)
+    return Response(json.dumps(deleted_relations), mimetype='application/json', status=200)
 
 
 # Expected JSON format:
