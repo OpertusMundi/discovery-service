@@ -11,6 +11,7 @@ def create_relation(from_node_id, to_node_id, relation_name):
         relation = session.write_transaction(_create_relation, from_node_id, to_node_id, relation_name)
     return relation
 
+
 def set_properties(from_node_id, to_node_id, relation_name, **kwargs):
     with neo.get_client().session() as session:
         relation = session.write_transaction(_set_properties, from_node_id, to_node_id, relation_name, **kwargs)

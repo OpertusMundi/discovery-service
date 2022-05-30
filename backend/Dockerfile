@@ -29,8 +29,12 @@ RUN pip3 install -r /requirements.txt
 #RUN git clone https://github.com/delftdata/sherlock-project.git /sherlock
 #RUN pip3 install -e /sherlock
 #
-## Pre-download sherlock's data
+# Pre-download sherlock's data
 #RUN python -c 'from sherlock.features import preprocessing; preprocessing.prepare_feature_extraction()'
+#RUN wget https://drive.google.com/uc?id=1kayd5oNRQm8-NCvA8pIrtezbQ-B1_Vmk -O /sherlock/sherlock/features/glove.6B.50d.txt
+#RUN wget https://drive.google.com/uc?id=1vdyGJ4aB71FCaNqJKYX387eVufcH4SAu -O /sherlock/sherlock/features/par_vec_trained_400.pkl.docvecs.vectors_docs.npy
+#RUN wget https://drive.google.com/uc?id=1hwE8We05oZLrACRibY8jc81NGughv79q -O /sherlock/sherlock/features/par_vec_trained_400.pkl.trainables.syn1neg.npy
+#RUN wget https://drive.google.com/uc?id=1StGoalk5SMbWX8Z-5weSbIAtK771UwoC -O /sherlock/sherlock/features/par_vec_trained_400.pkl.wv.vectors.npy
 
 # Copy run script
 COPY start.sh /

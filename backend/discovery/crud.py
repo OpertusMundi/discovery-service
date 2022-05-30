@@ -33,6 +33,7 @@ def create_subsumption_relation(source_path):
 def create_relation(from_node_id, to_node_id, relation_name):
     return edge_helper.create_relation(from_node_id, to_node_id, relation_name)
 
+
 def set_relation_properties(from_node_id, to_node_id, relation_name, **kwargs):
     return edge_helper.set_properties(from_node_id, to_node_id, relation_name, **kwargs)
 

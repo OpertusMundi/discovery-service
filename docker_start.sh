@@ -3,4 +3,5 @@ if [ ! -f "./.env" ]; then
     cp ./.env-default ./.env
 fi
 docker-compose down -v --remove-orphans
-docker-compose up --build
+docker-compose build
+docker-compose up

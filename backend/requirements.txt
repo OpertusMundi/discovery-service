@@ -13,3 +13,14 @@ celery==5.2.3
 # flower
 flower==1.0.0
 redis==4.1.2
+# sherlock
+gdown==4.3.0
+pyarrow==2.0.0
+numpy==1.21.5
+tqdm==4.51.0
+gensim==3.8.0
+nltk==3.6
+tensorflow==2.8.0
+scikit-learn==0.24
+pytest==6.2.5
+pyfunctional==1.4.3

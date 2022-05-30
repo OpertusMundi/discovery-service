@@ -57,7 +57,7 @@ services:
       - PYTHONUNBUFFERED=1
     env_file:
       - .env
-    command: celery -A backend.app.celery worker -l INFO --concurrency=2 --max-memory-per-child=2929687
+    command: celery -A backend.celery worker -l INFO --concurrency=2 --max-memory-per-child=2929687
     depends_on:
       - rabbitmq
 
@@ -66,7 +66,7 @@ services:
     build: ./backend
     volumes:
       - ./backend:/backend
-    command: "celery -A backend.app.celery flower --broker_api=http://rabbitmq:rabbitmq@rabbitmq:15672/api/"
+    command: "celery -A backend.celery flower --broker_api=http://rabbitmq:rabbitmq@rabbitmq:15672/api/"
     restart: always
     environment:
       - FLOWER_PORT=5555

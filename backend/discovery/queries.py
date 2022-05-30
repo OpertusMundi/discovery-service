@@ -12,6 +12,7 @@ from .utilities import process_relation, process_node
 def get_nodes():
     return node_helper.get_all()
 
+
 def get_node_by_prop(**kwargs):
     return node_helper.get_node(**kwargs)
 
@@ -41,21 +42,30 @@ def get_related_nodes(node_id):
 
     return related_nodes
 
+
 def get_joinable(table_name):
-    siblings = process_node(get_nodes_by_table_name(table_name))
+    # Get all the nodes belonging to the given table
+    nodes = node_helper.get_nodes_by_table_name(table_name)
+    # Simplify the object (only keep the table path, column name and column id)
+    siblings = process_node(nodes)
 
-    joinable = []
+    joinable_tables = []
     for sib in siblings:
-        nodes = process_relation(node_helper.get_joinable(sib['id']))
-        joinable = joinable + nodes
+        # Get all the nodes connected to a sibling via RELATED edge
+        related_nodes = node_helper.get_joinable(sib['id'])
+        print(related_nodes)
+        if len(related_nodes) > 0:
+            tables = process_relation(related_nodes)
+            joinable_tables = joinable_tables + tables
 
-    return joinable
+    print(joinable_tables)
+    return joinable_tables
 
 def get_siblings(node_id):
     return node_helper.get_siblings(node_id)
 
-def get_nodes_by_table_name(table_name):
-    return node_helper.get_nodes_by_table_name(table_name)
+
+
 
 
 

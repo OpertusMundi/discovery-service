@@ -16,6 +16,7 @@ celery = Celery(app.name, broker_url=f"amqp://{os.environ['RABBITMQ_DEFAULT_USER
                                      f"{os.environ['RABBITMQ_PORT']}/",
                 backend=f"redis://:{os.environ['REDIS_PASSWORD']}@"
                         f"{os.environ['REDIS_HOST']}:"
-                        f"{os.environ['REDIS_PORT']}/0")
+                        f"{os.environ['REDIS_PORT']}/0",
+                include=['backend.utility.celery_tasks'])
 
 CORS(app)

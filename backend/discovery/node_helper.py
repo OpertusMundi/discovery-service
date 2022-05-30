@@ -17,6 +17,7 @@ def get_all():
         nodes = session.write_transaction(_get_all)
     return nodes
 
+
 def get_node(**kwargs):
     with neo.get_client().session() as session:
         node = session.write_transaction(_get_node, **kwargs)
@@ -27,6 +28,7 @@ def get_related_nodes(node_id):
         nodes = session.write_transaction(_get_related_nodes, node_id)
     return nodes
 
+
 def get_joinable(node_id):
     with neo.get_client().session() as session:
         nodes = session.write_transaction(_get_joinable, node_id)
@@ -36,6 +38,7 @@ def get_siblings(node_id):
     with neo.get_client().session() as session:
         nodes = session.write_transaction(_get_siblings, node_id)
     return nodes
+
 
 def get_nodes_by_table_name(source_name):
     with neo.get_client().session() as session:

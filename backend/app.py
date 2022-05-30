@@ -5,21 +5,20 @@ import logging
 import os
 
 import requests
+from celery import chord
 from flask import Response
-from flask import request, make_response, Flask
-
-from celery import group, chord
+from flask import request
 
 # Import own modules
-from backend import app, celery
+from backend import app
 from backend import discovery
 from backend import profiling
 from backend import search
 from backend.discovery import relation_types
 from backend.profiling.valentine import process_match
+from backend.utility.celery_tasks import add_table, profile_valentine_all
 from backend.utility.display import log_format
 from backend.utility.parsing import parse_binder_results
-from backend.utility.celery_tasks import add_table, profile_valentine_all
 
 # Display/logging settings
 logging.basicConfig(format=log_format, level=logging.INFO)
@@ -54,7 +53,6 @@ def purge():
 # TODO: metanome runs for all tables at once, consider running it only for specific tables
 @app.route('/profile-metanome')
 def profile_metanome():
-    # Run binder on metanome and obtain constraints
     logging.info("Attempting to connect to Metanome...")
 
     address = os.environ["METANOME_API_ADDRESS"]
@@ -70,9 +68,10 @@ def profile_metanome():
 
     logging.info("Adding metanome constraints to neo4j...")
     for constraint in constraints:
-        print(constraint)
         relation = discovery.crud.create_relation(constraint[0], constraint[1],
                                                   discovery.relation_types.FOREIGN_KEY_METANOME)
+        discovery.crud.set_relation_properties(constraint[0], constraint[1], relation_types.FOREIGN_KEY_METANOME,
+                                               from_id=constraint[0], to_id=constraint[1])
 
     return Response('Success', 200)
 
@@ -133,9 +132,17 @@ def get_related_nodes(node_id):
     return Response(json.dumps(discovery.queries.get_related_nodes(node_id)), mimetype='application/json', status=200)
 
 
-# TODO: needs API revision
-@app.route('/get-joinable/<path:table_name>', methods=['GET'])
-def get_joinable(table_name):
+@app.route('/get-joinable', methods=['GET'])
+def get_joinable():
+    args = request.args
+    table_name = args.get("table_name")
+    if table_name is None:
+        return Response("Please provide a table name", status=400)
+
+    node = discovery.queries.get_node_by_prop(source_name=table_name)
+    if len(node) == 0:
+        return Response("Table does not exist", status=404)
+
     return Response(json.dumps(discovery.queries.get_joinable(table_name)), mimetype='application/json', status=200)
 
 
