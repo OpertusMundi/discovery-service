@@ -15,7 +15,7 @@ from backend import discovery
 from backend import profiling
 from backend import search
 from backend.discovery import relation_types
-from backend.discovery.queries import delete_spurious_connections
+from backend.discovery.queries import delete_spurious_connections, get_related_between_two_tables
 from backend.profiling.valentine import process_match
 from backend.utility.celery_tasks import add_table, profile_valentine_all
 from backend.utility.display import log_format
@@ -135,10 +135,25 @@ def get_table_csv():
     return search.io_tools.get_ddf(table_path).head(rows).to_csv()
 
 
-# TODO: needs API revision
-@app.route('/get-related/<path:node_id>', methods=['GET'])
-def get_related_nodes(node_id):
-    return Response(json.dumps(discovery.queries.get_related_nodes(node_id)), mimetype='application/json', status=200)
+@app.route('/get-related', methods=['GET'])
+def get_related_nodes():
+    args = request.args
+    from_table = args.get("from_table")
+    to_table = args.get("to_table")
+
+    if not from_table or not to_table:
+        return Response("Please provide the start and the end of the path", status=400)
+
+    node = discovery.queries.get_node_by_prop(source_name=from_table)
+    if len(node) == 0:
+        return Response("Table does not exist", status=404)
+
+    node = discovery.queries.get_node_by_prop(source_name=to_table)
+    if len(node) == 0:
+        return Response("Table does not exist", status=404)
+
+    paths = get_related_between_two_tables(from_table, to_table)
+    return Response(json.dumps(paths), mimetype='application/json', status=200)
 
 
 @app.route('/get-joinable', methods=['GET'])

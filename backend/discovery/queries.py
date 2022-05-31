@@ -6,6 +6,8 @@ from neo4j import GraphDatabase
 
 from . import node_helper
 from . import edge_helper
+from .edge_helper import shortest_path_between_tables
+from .relation_types import MATCH
 from .utilities import process_relation, process_node
 
 
@@ -74,6 +76,34 @@ def delete_spurious_connections():
         ids.append(relation.id)
         edge_helper.delete_relation_by_id(relation.id)
     return ids
+
+
+def get_related_between_two_tables(from_table: str, to_table: str) -> list:
+    # Get all shortest path between the two tables
+    paths = shortest_path_between_tables(from_table, to_table)
+    all_links = []
+    # Each path contains multiple segments
+    # A segment is a relationship between two nodes
+    for segment in paths:
+        link = []
+        # Remember the current table, because the traversal is directionless
+        # Therefore, we need to find the start node which matches with the previous end node
+        current_table = from_table
+        for relation in segment:
+            # We don't follow the sibling edges, only the match (RELATED)
+            if relation.type == MATCH:
+                if current_table in relation['from_id']:
+                    link.append(relation['from_id'])
+                    link.append(relation['to_id'])
+                    current_table = '/'.join(relation['to_id'].split('/')[:-1])
+                else:
+                    link.append(relation['to_id'])
+                    link.append(relation['from_id'])
+                    current_table = '/'.join(relation['from_id'].split('/')[:-1])
+        # Because of the sibling edges, some paths will be similar to previous
+        if link not in all_links:
+            all_links.append(link)
+    return all_links
 
 
 def get_siblings(node_id):
