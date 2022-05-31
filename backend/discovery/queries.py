@@ -58,10 +58,9 @@ def get_joinable(table_name):
         # If the node has connection, transform the result into something useful for us
         # { table_name: {PK: { from_id: <id>, to_id: <id> }, RELATED: <threshold>} ... }
         if len(related_nodes) > 0:
-            tables = process_relation(related_nodes)
+            tables = process_relation(table_name, related_nodes)
             joinable_tables = joinable_tables + tables
 
-    print(joinable_tables)
     return joinable_tables
 
 
@@ -85,6 +84,7 @@ def get_related_between_two_tables(from_table: str, to_table: str) -> list:
     # Each path contains multiple segments
     # A segment is a relationship between two nodes
     for segment in paths:
+        explanation = f"Table {from_table} and table {to_table} are connected via the following path:"
         link = []
         # Remember the current table, because the traversal is directionless
         # Therefore, we need to find the start node which matches with the previous end node
@@ -93,16 +93,18 @@ def get_related_between_two_tables(from_table: str, to_table: str) -> list:
             # We don't follow the sibling edges, only the match (RELATED)
             if relation.type == MATCH:
                 if current_table in relation['from_id']:
+                    explanation = f"{explanation} {relation['from_id']} -> {relation['to_id']} ->"
                     link.append(relation['from_id'])
                     link.append(relation['to_id'])
                     current_table = '/'.join(relation['to_id'].split('/')[:-1])
                 else:
+                    explanation = f"{explanation} {relation['to_id']} -> {relation['from_id']} ->"
                     link.append(relation['to_id'])
                     link.append(relation['from_id'])
                     current_table = '/'.join(relation['from_id'].split('/')[:-1])
         # Because of the sibling edges, some paths will be similar to previous
         if link not in all_links:
-            all_links.append(link)
+            all_links.append({'explanation': explanation, 'links': link})
     return all_links
 
 

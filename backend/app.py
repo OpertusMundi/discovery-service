@@ -35,6 +35,7 @@ def ingest_data(bucket):
     header = []
     for table_path in search.io_tools.get_tables(bucket):
         if not search.mongo_tools.get_table(table_path):
+            print(table_path)
             header.append(add_table.s(bucket, table_path))
         else:
             logging.info(f"Table {table_path} was already processed!")
