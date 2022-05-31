@@ -5,10 +5,11 @@ from neo4j import GraphDatabase
 
 neo4j_client = None
 
+
 def get_client():
     global neo4j_client
 
-    if neo4j_client==None:
+    if neo4j_client is None:
         address = os.environ["NEO4J_ADDRESS"]
         print(address)
         neo4j_client = GraphDatabase.driver(

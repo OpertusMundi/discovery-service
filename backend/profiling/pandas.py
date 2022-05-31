@@ -19,31 +19,41 @@ pm.uniqueness               = lambda series : pm.cardinality(series) / pm.row_co
 pm.data_type                = lambda series : str(series.dtype)
 
 
-def decorate(func, name):
-    def inner(series):
+def get_profile_column(series, python_types=True):
+    profile = {}
+    for name, function in pm.__dict__.items():
         try:
-            res = func(series)
-            if hasattr(res, 'compute'):
-                return res.compute()
-            return res
+            val = function(series)
+            profile[name] = val
         except Exception as e:
             logging.warning(f"Failed apply profiling function `{name}` to column {series.name} because: {e}")
-            return np.nan
-    return inner
+            profile[name] = ''
+
+    if python_types:
+        profile = convert_to_python_types(profile)
+
+    return profile
 
 
-def get_profile(ddf, ddf_name):
+def get_profile(df, name, python_types=True):
     profile = {}
-    futures = {}
+    for column_name in df.columns:
+        profile[f"{name}/{column_name}"] = get_profile_column(df[column_name], python_types=python_types)
+    return
 
-    functions = list(pm.__dict__.items())
-    for name, function in functions:
-        futures[name] = dask.get_client().map(decorate(function, name), [ddf[col] for col in ddf.columns])
-    
-    for name, _ in functions:
-        profile[name] = dask.get_client().gather(futures[name])
 
-    return pd.DataFrame.from_dict(profile, orient='index', columns=ddf.columns)
+# def get_profile(ddf, ddf_name):
+#     profile = {}
+#     futures = {}
+#
+#     functions = list(pm.__dict__.items())
+#     for name, function in functions:
+#         futures[name] = dask.get_client().map(decorate(function, name), [ddf[col] for col in ddf.columns])
+#
+#     for name, _ in functions:
+#         profile[name] = dask.get_client().gather(futures[name])
+#
+#     return pd.DataFrame.from_dict(profile, orient='index', columns=ddf.columns)
 
 
 def np_converter(obj):

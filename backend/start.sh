@@ -12,24 +12,11 @@ mc mb minio/data --ignore-existing
 
 if [ $MINIO_CLIENT_MIRROR -eq 1 ]; then
     echo "Mirroring storage folder..."
-    mc mirror --exclude ".*" /storage/ minio/data 
+    mc mirror --exclude ".*" backend/storage/ minio/data
 fi
 
+echo "Starting app..."
+screen -L -Logfile "/backend/logs/app.py.log" -dm -S app python3 -m backend.app
 
-echo "Starting modules..."
+screen -r app
 
-declare -a modules=(
-    "api" 
-    # "ingestion_queue" 
-)
-
-for path in "${modules[@]}"
-do
-    bname=$(basename "/src/${path}/${path}.py")
-    dname=$(dirname "/src/${path}/${path}.py")
-    stem=$(echo $bname | cut -d. -f1)
-    echo Starting $stem...
-    screen -L -Logfile "/logs/${bname}.log" -dm -S $stem python3 -m src.${path}.${path}
-done
-
-screen -r api

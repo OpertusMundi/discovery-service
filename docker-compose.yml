@@ -34,14 +34,11 @@ services:
       - "443:443"
     depends_on:
       - mongo
-      - elastic
       - neo4j
       - minio
     volumes:
-      - ./backend/src:/src
-      - ./backend/storage:/storage
-      - ./backend/logs:/logs
-    command:  sh -c "./wait && ./start"
+      - ./backend:/backend
+    command:  sh -c "./wait && ./start.sh"
     restart: always
     tty: true
     privileged: true
@@ -54,20 +51,22 @@ services:
   celery-worker:
     build: ./backend
     volumes:
-      - ./backend/src:/src
+      - ./backend:/backend
     restart: always
     environment:
       - PYTHONUNBUFFERED=1
     env_file:
       - .env
-    command: celery -A src.api.api.celery worker -l INFO --concurrency=2 --max-memory-per-child=2929687
+    command: celery -A backend.celery worker -l INFO --concurrency=2 --max-memory-per-child=2929687
+    depends_on:
+      - rabbitmq
 
   # Celery Flower dashboard
   celery-flower:
     build: ./backend
     volumes:
-      - ./backend/src:/src
-    command: "celery -A src.api.api.celery flower --broker_api=http://rabbitmq:rabbitmq@rabbitmq:15672/api/"
+      - ./backend:/backend
+    command: "celery -A backend.celery flower --broker_api=http://rabbitmq:rabbitmq@rabbitmq:15672/api/"
     restart: always
     environment:
       - FLOWER_PORT=5555
@@ -76,7 +75,16 @@ services:
     ports:
       - "5555:5555"
     depends_on:
+      - rabbitmq
       - celery-worker
+
+  redis:
+    image: redis:latest
+    env_file:
+      - .env
+    command: redis-server --requirepass redis --maxmemory 512mb
+    ports:
+      - "6379:6379"
 
   # Profiler which determines the primary-key foreign-key constraints
   metanome:
@@ -112,8 +120,8 @@ services:
       - "miniodata:/data"
     env_file:
       - .env
+
 volumes:
   miniodata:
   mongodbdata:
   neo4jdata:
-  elasticdata:

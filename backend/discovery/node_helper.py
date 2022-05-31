@@ -17,6 +17,7 @@ def get_all():
         nodes = session.write_transaction(_get_all)
     return nodes
 
+
 def get_node(**kwargs):
     with neo.get_client().session() as session:
         node = session.write_transaction(_get_node, **kwargs)
@@ -27,6 +28,7 @@ def get_related_nodes(node_id):
         nodes = session.write_transaction(_get_related_nodes, node_id)
     return nodes
 
+
 def get_joinable(node_id):
     with neo.get_client().session() as session:
         nodes = session.write_transaction(_get_joinable, node_id)
@@ -36,6 +38,7 @@ def get_siblings(node_id):
     with neo.get_client().session() as session:
         nodes = session.write_transaction(_get_siblings, node_id)
     return nodes
+
 
 def get_nodes_by_table_name(source_name):
     with neo.get_client().session() as session:
@@ -113,7 +116,7 @@ def _get_related_nodes(tx, node_id):
 
 def _create_node(tx, source, source_path, label):
     tx_result = tx.run("CREATE (n:Node) "
-                       "SET n.id = $source + '/' + $label, "
+                       "SET n.id = $source_path + '/' + $label, "
                        "n.name = $label, "
                        "n.source_name = $source, "
                        "n.source_path = $source_path "
