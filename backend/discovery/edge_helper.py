@@ -119,9 +119,10 @@ def _shortest_path_between_tables(tx, from_table, to_table):
     tx_result = tx.run("match (n {source_name: $from_table}), "
                        "(m {source_name: $to_table}), "
                        "p=shortestPath((n)-[r:RELATED|SIBLING*]-(m)) "
-                       "return relationships(p) as result", from_table=from_table, to_table=to_table)
+                       "return p", from_table=from_table, to_table=to_table)
+
     result = []
     for record in tx_result:
-        result.append(record['result'])
+        result.append(record['p'])
     return result
 
