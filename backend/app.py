@@ -189,7 +189,7 @@ class GetRelatedNodes(Resource):
 @api.route('/get-joinable')
 @api.doc(description="Gets all columns that are joinable on this table")
 @api.doc(params={
-    'from_table':  {'description': 'Path to the table', 'in': 'query', 'type': 'string', 'required': 'true'}
+    'table_name':  {'description': 'Path to the table', 'in': 'query', 'type': 'string', 'required': 'true'}
 })
 class GetJoinable(Resource):
     def get(self):
