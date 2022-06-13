@@ -9,6 +9,10 @@ def add_table(table_name, column_count, nodes):
 	get_db().table_metadata.insert_one({"name": table_name, "column_count": column_count, "nodes": nodes})
 
 
+def list_tables():
+	return list(get_db().table_metadata.find())
+
+
 def get_table(table_name):
 	return get_db().table_metadata.find_one({"name": table_name})
 

@@ -49,6 +49,12 @@ class IngestData(Resource):
         chord(header)(profile_valentine_all.si(bucket))
         return Response('Success', 200)
 
+@api.route('/list-ingested-tables')
+@api.doc(description="Lists all the ingested tables.")
+class ListIngestedTables(Resource):
+    def get(self):
+        table_list = search.mongo_tools.list_tables()
+        return Response(json.dumps(table_list, default=str), mimetype='application/json', status=200)
 
 @api.route('/purge')
 @api.doc(description="Purges all of the databases.")
@@ -141,13 +147,15 @@ class AddTable(Resource):
 @api.doc(description="Gets a part of the table at the given path as CSV.")
 class GetTableCSV(Resource):
     @api.expect(api.model('GetTableCSV', {
+        'bucket_path': fields.String(description='Name of the bucket containing the table', required=True), 
         'table_path': fields.String(description='Path to the table', required=True), 
         'rows': fields.Integer(description='Number of rows to get', required=True, min=0)
     }))
     def post(self):
+        bucket_path = api.payload['bucket_path']
         table_path = api.payload['table_path']
         rows = api.payload['rows']
-        return search.io_tools.get_ddf(table_path).head(rows).to_csv()
+        return search.io_tools.get_ddf(bucket_path, table_path).head(rows).to_csv()
 
 
 @api.route('/get-related')
