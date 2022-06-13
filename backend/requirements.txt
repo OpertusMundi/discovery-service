@@ -24,4 +24,4 @@ tensorflow==2.8.0
 scikit-learn==0.24
 pytest==6.2.5
 pyfunctional==1.4.3
-flask-restx==0.1.1
+flask-restx==0.5.0
