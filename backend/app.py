@@ -26,8 +26,8 @@ from backend.utility.parsing import parse_binder_results
 # Display/logging settings
 logging.basicConfig(format=log_format, level=logging.INFO)
 
-@api.route('/')
-@api.doc(description="The base route, for testing whether the API is reachable.")
+@api.route('/test')
+@api.doc(description="For testing whether the API is reachable.")
 class Index(Resource):
     def get(self):
         return '"I live... Again"'
@@ -54,7 +54,6 @@ class IngestData(Resource):
 @api.doc(description="Purges all of the databases.")
 class Purge(Resource):
     def get(self):
-        # search.es_tools.init_indices(purge=True)
         search.mongo_tools.purge()
         discovery.crud.delete_all_nodes()
         return Response('Success', 200)
