@@ -24,3 +24,4 @@ tensorflow==2.8.0
 scikit-learn==0.24
 pytest==6.2.5
 pyfunctional==1.4.3
+watchdog==2.1.9 

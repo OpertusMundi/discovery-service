@@ -57,7 +57,7 @@ services:
       - PYTHONUNBUFFERED=1
     env_file:
       - .env
-    command: celery -A backend.celery worker -l INFO --concurrency=2 --max-memory-per-child=2929687
+    command: watchmedo auto-restart -d '/backend/utility' -p '*.py' -R -- celery -A backend.celery worker -l INFO --concurrency=2 --max-memory-per-child=2929687
     depends_on:
       - rabbitmq
 
