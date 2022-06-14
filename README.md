@@ -19,4 +19,8 @@ The following admin-panels are exposed, for inspecting the services:
 - Elasticsearch: `localhost:5000`
 - MinIO server: `localhost:9000`
 
+#### File sharing error
 If you get an error about file sharing on windows, visit [this](https://stackoverflow.com/questions/60754297/docker-compose-failed-to-build-filesharing-has-been-cancelled) thread.
+
+#### Celery hot-reloading on Windows
+On Linux containers that run under Windows, file notifications for watched files in volumes do not function, so celery task hot-reloading is broken. To deal with this, clone [this repository](https://github.com/Archer6621/docker-windows-volume-watcher), and run the batch file `volume_watcher_windows.bat`, which will watch the folders on windows and then send the relevant notifications/events into the celery container.
