@@ -57,7 +57,8 @@ services:
       - PYTHONUNBUFFERED=1
     env_file:
       - .env
-    command: watchmedo auto-restart -d '/backend/utility' -p '*.py' -R -- celery -A backend.celery worker -l INFO --concurrency=2 --max-memory-per-child=2929687
+    # Polling is required because inotify does not work on subfolders of bind mounts
+    command: watchmedo auto-restart --debug-force-polling -d /backend/utility/celery_tasks.py -d /backend/__init__.py -- celery -A backend.celery worker -l INFO --concurrency=2 --max-memory-per-child=2929687
     depends_on:
       - rabbitmq
 
