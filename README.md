@@ -19,4 +19,5 @@ The following admin-panels are exposed, for inspecting the services:
 - Elasticsearch: `localhost:5000`
 - MinIO server: `localhost:9000`
 
+#### File sharing error
 If you get an error about file sharing on windows, visit [this](https://stackoverflow.com/questions/60754297/docker-compose-failed-to-build-filesharing-has-been-cancelled) thread.
