@@ -21,6 +21,7 @@ def get_ddf(bucket, path):
         quotechar='"',
         escapechar='\\',
         # on_bad_lines='warn', # For some reason Dask doesn't like this keyword parameter all of a sudden, even though it is supported!
+        storage_options=dask.get_s3_settings()
     )
 
     return ddf
