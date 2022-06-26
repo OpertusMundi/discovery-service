@@ -26,6 +26,7 @@ from backend.utility.parsing import parse_binder_results
 # Display/logging settings
 logging.basicConfig(format=log_format, level=logging.INFO)
 
+
 @api.route('/test')
 @api.doc(description="For testing whether the API is reachable.")
 class Index(Resource):
@@ -49,12 +50,14 @@ class IngestData(Resource):
         chord(header)(profile_valentine_all.si(bucket))
         return Response('Success', 200)
 
+
 @api.route('/list-ingested-tables')
 @api.doc(description="Lists all the ingested tables.")
 class ListIngestedTables(Resource):
     def get(self):
         table_list = search.mongo_tools.list_tables()
         return Response(json.dumps(table_list, default=str), mimetype='application/json', status=200)
+
 
 @api.route('/purge')
 @api.doc(description="Purges all of the databases.")
@@ -67,7 +70,7 @@ class Purge(Resource):
 
 # TODO: metanome runs for all tables at once, consider running it only for specific tables
 @api.route('/profile-metanome')
-@api.doc(description="Runs Metanome profiling for all tables, which is used to obtain column relations between the tables.")
+@api.doc(description="Runs Metanome profiling for all tables, which is used to obtain KFK relations between the tables.")
 class ProfileMetanome(Resource):
     def get(self):
         logging.info("Attempting to connect to Metanome...")
@@ -94,7 +97,7 @@ class ProfileMetanome(Resource):
 
 
 @api.route('/filter-connections')
-@api.doc(description="Filters spurious connections.")
+@api.doc(description="Filters spurious connections. This step is required after the ingestion phase.")
 class FilterConnections(Resource):
     def get(self):
         deleted_relations = delete_spurious_connections()
@@ -159,17 +162,16 @@ class GetTableCSV(Resource):
 
 
 @api.route('/get-related')
-@api.doc(description="Gets all columns between two tables that are related somehow according to the profiling data.")
+@api.doc(description="Get all the assets on the path connecting the source and the target tables.")
 @api.doc(params={
-    'from_table':  {'description': 'Path to the first table', 'in': 'query', 'type': 'string', 'required': 'true'}, 
-    'to_table':  {'description': 'Path to the second table', 'in': 'query', 'type': 'string', 'required': 'true'}
+    'source_table':  {'description': 'Table name', 'in': 'query', 'type': 'string', 'required': 'true'},
+    'target_table':  {'description': 'Table name', 'in': 'query', 'type': 'string', 'required': 'true'}
 })
-# NOTE: API is very inconsistent in how it passes arguments, perhaps we should unify this?
 class GetRelatedNodes(Resource):
     def get(self):
         args = request.args
-        from_table = args.get("from_table")
-        to_table = args.get("to_table")
+        from_table = args.get("source_table")
+        to_table = args.get("target_table")
 
         if not from_table or not to_table:
             return Response("Please provide the start and the end of the path", status=400)
@@ -187,14 +189,14 @@ class GetRelatedNodes(Resource):
 
 
 @api.route('/get-joinable')
-@api.doc(description="Gets all columns that are joinable on this table")
+@api.doc(description="Gets all assets that are joinable with the given source table.")
 @api.doc(params={
-    'table_name':  {'description': 'Path to the table', 'in': 'query', 'type': 'string', 'required': 'true'}
+    'source_table':  {'description': 'Table name', 'in': 'query', 'type': 'string', 'required': 'true'}
 })
 class GetJoinable(Resource):
     def get(self):
         args = request.args
-        table_name = args.get("table_name")
+        table_name = args.get("source_table")
         if table_name is None:
             return Response("Please provide a table name", status=400)
 
