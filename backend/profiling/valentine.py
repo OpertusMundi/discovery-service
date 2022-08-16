@@ -23,4 +23,4 @@ def process_match(table1_path, table2_path, matches):
             print(node_ids_t2[col_to])
             create_relation(node_ids_t1[col_from], node_ids_t2[col_to], relation_types.MATCH)
             set_relation_properties(node_ids_t1[col_from], node_ids_t2[col_to], relation_types.MATCH, coma=similarity,
-                                    from_id=node_ids_t1[col_from], to_id=node_ids_t1[col_to])
+                                    from_id=node_ids_t1[col_from], to_id=node_ids_t2[col_to])
