@@ -44,6 +44,7 @@ services:
     privileged: true
     environment:
       WAIT_HOSTS: mongo:27017, neo4j:7474, neo4j:7687, minio:9000
+      PYTHONUNBUFFERED: 1
     env_file:
       - .env
 
@@ -58,7 +59,7 @@ services:
     env_file:
       - .env
     # Polling is required because inotify does not work on subfolders of bind mounts
-    command: watchmedo auto-restart --debug-force-polling -d /backend/utility/celery_tasks.py -d /backend/__init__.py -- celery -A backend.celery worker -l INFO --concurrency=2 --max-memory-per-child=2929687
+    command: watchmedo auto-restart --debug-force-polling -d /backend/utility/celery_tasks.py -d /backend/__init__.py -- celery -A backend.celery worker -l INFO --concurrency=1
     depends_on:
       - rabbitmq
 

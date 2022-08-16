@@ -1,3 +1,4 @@
+import logging
 from os import listdir
 from os.path import isfile, join
 
@@ -55,6 +56,7 @@ def get_joinable(table_name):
     for sib in siblings:
         # Get all the nodes connected to a sibling via RELATED edge
         related_nodes = node_helper.get_joinable(sib['id'])
+        logging.info(f"RELATED NODES: {related_nodes}")
         # If the node has connection, transform the result into something useful for us
         # { table_name: {PK: { from_id: <id>, to_id: <id> }, RELATED: <threshold>} ... }
         if len(related_nodes) > 0:
@@ -104,8 +106,9 @@ def get_related_between_two_tables(from_table: str, to_table: str) -> list:
                     link.append(relation.start_node['id'])
                     current_table = '/'.join(relation.start_node['id'].split('/')[:-1])
         # Because of the sibling edges, some paths will be similar to previous
-        if link not in all_links:
-            all_links.append({'explanation': explanation, 'links': link})
+        connection = {'explanation': explanation, 'links': link}
+        if connection not in all_links:
+            all_links.append(connection)
     return all_links
 
 

@@ -27,6 +27,7 @@ from backend.utility.parsing import parse_binder_results
 logging.basicConfig(format=log_format, level=logging.INFO)
 
 
+# TODO: Delete
 @api.route('/test')
 @api.doc(description="For testing whether the API is reachable.")
 class Index(Resource):
@@ -34,6 +35,8 @@ class Index(Resource):
         return '"I live... Again"'
 
 
+# TODO: Change to query param
+# TODO: Add error checks: does the bucket exist?
 @api.route('/ingest-data/<path:bucket>')
 @api.doc(description="Ingest all the data located at the given bucket.")
 @api.doc(params={'bucket': {'description': 'Path to the S3 bucket with data', 'required': True}})
@@ -47,10 +50,15 @@ class IngestData(Resource):
             else:
                 logging.info(f"Table {table_path} was already processed!")
 
+        # TODO: get the id of the celery task and make another endpoint to check if it's done
+        # check in celery if we can see the active/done/failed tasks
+        # maybe return the task id??
         chord(header)(profile_valentine_all.si(bucket))
+
         return Response('Success', 200)
 
 
+# TODO: Not for the user, we can remove the endpoint
 @api.route('/list-ingested-tables')
 @api.doc(description="Lists all the ingested tables.")
 class ListIngestedTables(Resource):
@@ -68,15 +76,17 @@ class Purge(Resource):
         return Response('Success', 200)
 
 
-# TODO: metanome runs for all tables at once, consider running it only for specific tables
-@api.route('/profile-metanome')
+# TODO: metanome runs for all tables at once, consider running it only for specific tables - on hold for now
+# TODO: Refactor and add error checks (move the logic to another module)
+# TODO: Implement the algorithm for PK-FK and remove metanome
+@api.route('/profile-metanome/<path:bucket>')
 @api.doc(description="Runs Metanome profiling for all tables, which is used to obtain KFK relations between the tables.")
 class ProfileMetanome(Resource):
-    def get(self):
+    def get(self, bucket):
         logging.info("Attempting to connect to Metanome...")
 
         address = os.environ["METANOME_API_ADDRESS"]
-        binder_res = requests.get(f'http://{address}/run_binder')
+        binder_res = requests.get(f'http://{address}/run_binder/{bucket}')
 
         if binder_res.status_code >= 400:
             raise ConnectionError(f"Could not reach Metanome! Status: {binder_res.status_code}")
@@ -106,6 +116,7 @@ class FilterConnections(Resource):
         return Response(json.dumps(deleted_relations), mimetype='application/json', status=200)
 
 
+# TODO: Refactor it - make it ready for adding new tables on the fly
 @api.route('/profile-valentine')
 @api.doc(description="Runs Valentine profiling between the given tables, used for finding columns that are related.")
 class ProfileValentine(Resource):
@@ -134,6 +145,7 @@ class ProfileValentine(Resource):
         return str(f"Successfully profiled {table1_path} and {table2_path} with threshold {threshold}!")
 
 
+# TODO: Add the profiling methods to the new tables
 @api.route('/add-table')
 @api.doc(description="Initiates ingestion for the table at the given S3 path.")
 class AddTable(Resource):
@@ -146,6 +158,7 @@ class AddTable(Resource):
         return f"Starting to ingest newly added table {table_path}"
 
 
+# TODO: Refactor - make it consistent with the rest of the endpoints (make it a get instead of post)
 @api.route('/get-table-csv')
 @api.doc(description="Gets a part of the table at the given path as CSV.")
 class GetTableCSV(Resource):
@@ -188,6 +201,7 @@ class GetRelatedNodes(Resource):
         return Response(json.dumps(paths), mimetype='application/json', status=200)
 
 
+# TODO: Change the name of the params in the jupyterlab extension
 @api.route('/get-joinable')
 @api.doc(description="Gets all assets that are joinable with the given source table.")
 @api.doc(params={

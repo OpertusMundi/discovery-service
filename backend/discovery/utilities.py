@@ -1,11 +1,24 @@
+import logging
+
+from backend.utility.display import log_format
+logging.basicConfig(format=log_format, level=logging.INFO)
+
+
 def process_relation(base_table, result):
     tables = []
+    assets = []
     for relation in result:
         table = {}
         # Get connected node to the sibling. A relation is only between 2 nodes, so filter outputs one result
         related_node = list(filter(lambda x: x.get('id') is not None, relation.nodes))[0]
-
         table['table_name'] = related_node.get('source_name')
+        if table['table_name'] in assets:
+            logging.info(f"IN ASSETS: {table['table_name']}")
+            continue
+
+        assets.append(table['table_name'])
+        logging.info(f"TABLE NAME: {table['table_name']}")
+
         explanation = f"Table {base_table} is joinable with table {related_node.get('source_name')}"
 
         if "to_id" in relation:

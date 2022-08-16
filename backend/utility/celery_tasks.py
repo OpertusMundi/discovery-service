@@ -14,6 +14,7 @@ from ..profiling.valentine import match, process_match
 from ..search import io_tools
 
 
+# return value to know if it succeed or not
 @celery.task
 def add_table(bucket, table_path):
     table_name = table_path.split('/')[-1]
@@ -44,7 +45,7 @@ def profile_valentine_all(bucket):
         csv_string = minio_client.get_object(bucket, tab1_path).data.decode("utf-8")
         df_tab1 = pd.read_csv(StringIO(csv_string), header=0, engine="python", encoding="utf8", quotechar='"',
                          escapechar='\\', nrows=1000)
-
+        logging.warning(f'Valentining files: {table_pair}')
         csv_string = minio_client.get_object(bucket, tab2_path).data.decode("utf-8")
         df_tab2 = pd.read_csv(StringIO(csv_string), header=0, engine="python", encoding="utf8", quotechar='"',
                               escapechar='\\', nrows=1000)

@@ -28,8 +28,8 @@ def index():
     return "HELLO"
 
 
-@app.route("/run_binder")
-def run_binder():
+@app.route("/run_binder/<path:bucket>")
+def run_binder(bucket):
     minio_connection = mn.create_minio_connection(
         f"http://{MINIO_HOST}:{MINIO_PORT}",
         MINIO_ACCESS_KEY,
@@ -43,7 +43,7 @@ def run_binder():
         requests.delete(f"http://{METANOME_ADDRESS}/api/minio-inputs/delete/{inp['id']}")
 
     # This one makes a whole bunch of inputs, doesn't return anything useful, so performing a get is better
-    minio_input = mn.create_minio_input("", MINIO_DEFAULT_BUCKET, res_minio_connection)
+    minio_input = mn.create_minio_input("", bucket, res_minio_connection)
     requests.post(f"http://{METANOME_ADDRESS}/api/minio-inputs/bucket", json=minio_input)
     inputs = requests.get(f"http://{METANOME_ADDRESS}/api/minio-inputs").json()
 
