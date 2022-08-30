@@ -101,7 +101,7 @@ class Purge(Resource):
     def get(self):
         search.mongo_tools.purge()
         discovery.crud.delete_all_nodes()
-        return Response('Success', 200)
+        return Response('Success', status=200)
 
 
 # TODO: metanome runs for all tables at once, consider running it only for specific tables - on hold for now
@@ -131,7 +131,7 @@ class ProfileMetanome(Resource):
             discovery.crud.set_relation_properties(constraint[0], constraint[1], relation_types.FOREIGN_KEY_METANOME,
                                                    from_id=constraint[0], to_id=constraint[1])
 
-        return Response('Success', 200)
+        return Response('Success', status=200)
 
 
 @api.route('/filter-connections')
