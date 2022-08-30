@@ -27,25 +27,21 @@ from backend.utility.parsing import parse_binder_results
 logging.basicConfig(format=log_format, level=logging.INFO)
 
 
-# TODO: Delete
-@api.route('/test')
-@api.doc(description="For testing whether the API is reachable.")
-class Index(Resource):
-    def get(self):
-        return '"I live... Again"'
-
-
 # TODO: Change to query param
 # TODO: Add error checks: does the bucket exist?
-@api.route('/ingest-data/<path:bucket>')
+@api.route('/ingest-data')
 @api.doc(description="Ingest all the data located at the given bucket.")
-@api.doc(params={'bucket': {'description': 'Path to the S3 bucket with data', 'required': True}})
 class IngestData(Resource):
-    def get(self, bucket):
+    @api.response(200, 'Success', api.model('IngestDataResponse', {'task_id': fields.String,}))
+    @api.response(404, 'Bucket does not exist!')
+    @api.expect(api.model('IngestDataInput', {
+        'bucket': fields.String(description='Path to the S3 bucket with data', required=True)
+    }))
+    def get(self):
+        bucket = api.payload['bucket']
         header = []
         for table_path in search.io_tools.get_tables(bucket):
             if not search.mongo_tools.get_table(table_path):
-                print(table_path)
                 header.append(add_table.s(bucket, table_path))
             else:
                 logging.info(f"Table {table_path} was already processed!")
@@ -53,18 +49,9 @@ class IngestData(Resource):
         # TODO: get the id of the celery task and make another endpoint to check if it's done
         # check in celery if we can see the active/done/failed tasks
         # maybe return the task id??
-        chord(header)(profile_valentine_all.si(bucket))
+        task_id = chord(header)(profile_valentine_all.si(bucket))
 
-        return Response('Success', 200)
-
-
-# TODO: Not for the user, we can remove the endpoint
-@api.route('/list-ingested-tables')
-@api.doc(description="Lists all the ingested tables.")
-class ListIngestedTables(Resource):
-    def get(self):
-        table_list = search.mongo_tools.list_tables()
-        return Response(json.dumps(table_list, default=str), mimetype='application/json', status=200)
+        return Response(json.dumps({"task_id": task_id}), 200)
 
 
 @api.route('/purge')
@@ -201,7 +188,6 @@ class GetRelatedNodes(Resource):
         return Response(json.dumps(paths), mimetype='application/json', status=200)
 
 
-# TODO: Change the name of the params in the jupyterlab extension
 @api.route('/get-joinable')
 @api.doc(description="Gets all assets that are joinable with the given source table.")
 @api.doc(params={

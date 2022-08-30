@@ -8,6 +8,10 @@ def get_tables(bucket):
     return [o.object_name for o in objects]
 
 
+def bucket_exists(bucket):
+    return minio.minio_client.bucket_exists(bucket)
+
+
 def get_ddf(bucket, path):
     minio_path = f"s3://{bucket}/{path}"
 
