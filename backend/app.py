@@ -5,7 +5,7 @@ import logging
 import os
 
 import requests
-from celery import chord
+from celery import chord, group
 from flask import Response
 from flask import request
 from flask_restx import Resource, fields
@@ -16,6 +16,7 @@ from backend import api
 from backend import discovery
 from backend import profiling
 from backend import search
+from backend import celery as celery_app
 from backend.discovery import relation_types
 from backend.discovery.queries import delete_spurious_connections, get_related_between_two_tables
 from backend.profiling.valentine import process_match
@@ -27,31 +28,71 @@ from backend.utility.parsing import parse_binder_results
 logging.basicConfig(format=log_format, level=logging.INFO)
 
 
-# TODO: Change to query param
-# TODO: Add error checks: does the bucket exist?
 @api.route('/ingest-data')
 @api.doc(description="Ingest all the data located at the given bucket.")
+@api.doc(params={
+    'bucket':  {'description': 'Path to the S3 bucket with data', 'in': 'query', 'type': 'string', 'required': 'true'},
+})
 class IngestData(Resource):
-    @api.response(200, 'Success', api.model('IngestDataResponse', {'task_id': fields.String,}))
-    @api.response(404, 'Bucket does not exist!')
-    @api.expect(api.model('IngestDataInput', {
-        'bucket': fields.String(description='Path to the S3 bucket with data', required=True)
+    @api.response(200, 'Success', api.model('IngestDataResponse', {
+        'task_id': fields.String, 
     }))
+    @api.response(404, 'Bucket does not exist')
+    @api.response(400, 'Bucket is empty')
     def get(self):
-        bucket = api.payload['bucket']
+        bucket = request.args.get("bucket")
+
+        if not search.io_tools.bucket_exists(bucket):
+            return Response("Bucket does not exist", 404)
+        paths = search.io_tools.get_tables(bucket)
+        if len(paths) == 0:
+            return Response("Bucket is empty", 400)
         header = []
-        for table_path in search.io_tools.get_tables(bucket):
+        for table_path in paths:
             if not search.mongo_tools.get_table(table_path):
                 header.append(add_table.s(bucket, table_path))
             else:
                 logging.info(f"Table {table_path} was already processed!")
+        
+        task_group = group(*header)
+        profiling_chord = chord(task_group)(profile_valentine_all.si(bucket))
+        profiling_chord.parent.save()
+        search.mongo_tools.store_celery_task_id(profiling_chord.parent.id, profiling_chord.id)
 
-        # TODO: get the id of the celery task and make another endpoint to check if it's done
-        # check in celery if we can see the active/done/failed tasks
-        # maybe return the task id??
-        task_id = chord(header)(profile_valentine_all.si(bucket))
+        return Response(json.dumps({"task_id": profiling_chord.parent.id}), mimetype='application/json', status=200)
 
-        return Response(json.dumps({"task_id": task_id}), 200)
+
+TaskStatusModel = api.model("TaskStatus", {
+    'task_name': fields.String, 
+    'task_id': fields.String, 
+    'task_status': fields.String
+})
+@api.route('/task-status')
+@api.doc(description="Checks the status of a task.")
+@api.doc(params={
+    'task_id':  {'description': 'ID of task to check', 'in': 'query', 'type': 'string', 'required': 'true'},
+})
+# Based on solution in: https://github.com/celery/celery/issues/4516
+class TaskStatus(Resource):
+    @api.response(200, 'Success', api.model('TaskStatusResponse', {
+        'profiling_callback_status': fields.Nested(TaskStatusModel), 
+        'ingestion_tasks': fields.List(fields.Nested(TaskStatusModel))
+        }))
+    @api.response(404, 'No such task')
+    def get(self):
+        parent_id = request.args.get("task_id")
+        parent = celery_app.GroupResult.restore(parent_id)
+        task_id = search.mongo_tools.get_celery_task_id(parent_id)
+        if not task_id:
+            return Response("Task does not exist", 404)
+        task = celery_app.AsyncResult(task_id, parent=parent)
+        return Response(json.dumps({
+            "profiling_callback_status": {'task_name': f'{task.name} ({str(task.args)})', 'task_id': task.id, 'task_status': task.status},
+            "ingestion_task_statuses": [{'task_name': f'{child.name} ({str(child.args)})', 'task_id': child.id, 'task_status': child.status} for child in task.parent.children]
+            }), mimetype='application/json', status=200)
+        
+
+
 
 
 @api.route('/purge')
