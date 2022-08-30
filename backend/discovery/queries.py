@@ -3,6 +3,7 @@ from os import listdir
 from os.path import isfile, join
 
 import pandas as pd
+import numpy as np
 from neo4j import GraphDatabase
 
 from . import node_helper
@@ -52,7 +53,7 @@ def get_joinable(table_name):
     # Simplify the object (only keep the table path, column name and column id)
     siblings = process_node(nodes)
 
-    joinable_tables = []
+    joinable_tables = {}
     for sib in siblings:
         # Get all the nodes connected to a sibling via RELATED edge
         related_nodes = node_helper.get_joinable(sib['id'])
@@ -61,9 +62,18 @@ def get_joinable(table_name):
         # { table_name: {PK: { from_id: <id>, to_id: <id> }, RELATED: <threshold>} ... }
         if len(related_nodes) > 0:
             tables = process_relation(table_name, related_nodes)
-            joinable_tables = joinable_tables + tables
+            for related_table in tables:
+                related_table_name = related_table["table_name"]
+                if related_table_name not in joinable_tables:
+                    joinable_tables[related_table_name] = {"matches" : []}
+                related_table.pop("table_name") # We move this one level up
+                joinable_tables[related_table_name]["matches"].append(related_table) 
+                joinable_tables[related_table_name]["table_name"] = related_table_name
+            joinable_tables[related_table_name]["matches"] = list(sorted(joinable_tables[related_table_name]["matches"], key=lambda x : -x["RELATED"]["coma"]))
 
-    return joinable_tables
+    joinable_tables_sorted = sorted(list(joinable_tables.values()), key=lambda x: (-len(x["matches"]), -np.mean([x["RELATED"]["coma"] for x in x["matches"]])))
+
+    return joinable_tables_sorted
 
 
 def delete_spurious_connections():
