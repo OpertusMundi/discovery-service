@@ -21,6 +21,9 @@ celery = Celery(app.name, broker_url=f"amqp://{os.environ['RABBITMQ_DEFAULT_USER
                 backend=f"redis://:{os.environ['REDIS_PASSWORD']}@"
                         f"{os.environ['REDIS_HOST']}:"
                         f"{os.environ['REDIS_PORT']}/0",
-                include=['backend.utility.celery_tasks'])
+                include=['backend.utility.celery_tasks'],
+                task_track_started=True,  # Makes sure task status changes to "STARTED"
+                result_extended=True  # Also stores args, task name, task children, etc into backend
+        )
 
 CORS(app)
