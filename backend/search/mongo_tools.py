@@ -4,9 +4,9 @@ from pymongo.database import Database
 
 
 class Table(TypedDict):
-    "name": str
-    "column_count": int
-    "nodes": dict[str, str]
+    name: str
+    column_count: int
+    nodes: dict[str, str]
 
 
 def get_db() -> Database:
