@@ -1,5 +1,6 @@
 from ..clients import mongodb
-from typing import Any, TypedDict
+from typing import Any
+from typing_extensions import TypedDict
 from pymongo.database import Database
 
 
