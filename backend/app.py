@@ -93,11 +93,10 @@ class TaskStatus(Resource):
         
 
 
-
-
 @api.route('/purge')
 @api.doc(description="Purges all of the databases.")
 class Purge(Resource):
+    @api.response(200, 'Success')
     def get(self):
         search.mongo_tools.purge()
         discovery.crud.delete_all_nodes()
