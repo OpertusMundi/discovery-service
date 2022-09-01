@@ -137,11 +137,13 @@ class ProfileMetanome(Resource):
 @api.route('/filter-connections')
 @api.doc(description="Filters spurious connections. This step is required after the ingestion phase.")
 class FilterConnections(Resource):
+    # NOTE: We can only have a single response per code, see: https://github.com/python-restx/flask-restx/issues/274
+    @api.response(200, 'Success', api.model('DeletedRelations', {
+        'deleted_relations': fields.List(fields.String)
+        }))
     def get(self):
         deleted_relations = delete_spurious_connections()
-        if len(deleted_relations) == 0:
-            return Response("No relationships affected", status=200)
-        return Response(json.dumps(deleted_relations), mimetype='application/json', status=200)
+        return Response(json.dumps({"deleted_relations": deleted_relations}), mimetype='application/json', status=200)
 
 
 # TODO: Refactor it - make it ready for adding new tables on the fly
