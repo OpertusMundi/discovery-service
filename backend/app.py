@@ -34,7 +34,7 @@ logging.basicConfig(format=log_format, level=logging.INFO)
     'bucket':  {'description': 'Path to the S3 bucket with data', 'in': 'query', 'type': 'string', 'required': 'true'},
 })
 class IngestData(Resource):
-    @api.response(200, 'Success', api.model('IngestDataResponse', {
+    @api.response(202, 'Success', api.model('IngestDataResponse', {
         'task_id': fields.String, 
     }))
     @api.response(404, 'Bucket does not exist')
@@ -59,7 +59,7 @@ class IngestData(Resource):
         profiling_chord.parent.save()
         search.mongo_tools.store_celery_task_id(profiling_chord.parent.id, profiling_chord.id)
 
-        return Response(json.dumps({"task_id": profiling_chord.parent.id}), mimetype='application/json', status=200)
+        return Response(json.dumps({"task_id": profiling_chord.parent.id}), mimetype='application/json', status=202)
 
 
 TaskStatusModel = api.model("TaskStatus", {
