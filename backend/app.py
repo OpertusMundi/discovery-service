@@ -20,9 +20,9 @@ from backend import celery as celery_app
 from backend.discovery import relation_types
 from backend.discovery.queries import delete_spurious_connections, get_related_between_two_tables
 from backend.profiling.valentine import process_match
+from backend.profiling.metanome import profile_metanome
 from backend.utility.celery_tasks import add_table, profile_valentine_all
 from backend.utility.display import log_format
-from backend.utility.parsing import parse_binder_results
 
 # Display/logging settings
 logging.basicConfig(format=log_format, level=logging.INFO)
@@ -110,28 +110,18 @@ class Purge(Resource):
 @api.route('/profile-metanome/<path:bucket>')
 @api.doc(description="Runs Metanome profiling for all tables, which is used to obtain KFK relations between the tables.")
 class ProfileMetanome(Resource):
+    @api.response(200, 'Success')
+    @api.response(404, 'Bucket does not exist')
+    @api.response(500, 'Cannot connect to Metanome')
     def get(self, bucket):
-        logging.info("Attempting to connect to Metanome...")
+        if not search.io_tools.bucket_exists(bucket):
+            return Response("Bucket does not exist", 404)
+        try:
+            profile_metanome(os.environ["METANOME_API_ADDRESS"], bucket)
+            return Response('Success', status=200)
+        except ConnectionError:
+            return Response('Cannot connect to Metanome', status=500)
 
-        address = os.environ["METANOME_API_ADDRESS"]
-        binder_res = requests.get(f'http://{address}/run_binder/{bucket}')
-
-        if binder_res.status_code >= 400:
-            raise ConnectionError(f"Could not reach Metanome! Status: {binder_res.status_code}")
-
-        binder_data = binder_res.content.decode("utf-8")
-
-        logging.info("Parsing obtained results from metanome...")
-        constraints = parse_binder_results(binder_data)
-
-        logging.info("Adding metanome constraints to neo4j...")
-        for constraint in constraints:
-            relation = discovery.crud.create_relation(constraint[0], constraint[1],
-                                                      discovery.relation_types.FOREIGN_KEY_METANOME)
-            discovery.crud.set_relation_properties(constraint[0], constraint[1], relation_types.FOREIGN_KEY_METANOME,
-                                                   from_id=constraint[0], to_id=constraint[1])
-
-        return Response('Success', status=200)
 
 
 @api.route('/filter-connections')
