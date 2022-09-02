@@ -34,7 +34,8 @@ def add_table(bucket, table_path):
     discovery.crud.create_subsumption_relation(table_path)
 
     logging.info(f"- Adding ingestion record to mongodb")
-    search.mongo_tools.add_table(table_path, len(df.columns), nodes)
+
+    search.mongo_tools.add_table(table_name, table_path, bucket, len(df.columns), nodes)
 
 
 @celery.task

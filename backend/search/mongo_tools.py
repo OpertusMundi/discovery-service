@@ -23,20 +23,30 @@ def get_celery_task_id(parent_id: str) -> str:
 	return res["task_id"] if res else None
 
 
-def add_table(table_name: str, column_count: int, nodes: Dict[str, str]):
-	get_db().table_metadata.insert_one({"name": table_name, "column_count": column_count, "nodes": nodes})
+def add_table(table_name: str, table_path: str, table_bucket: str, column_count: int, nodes: Dict[str, str]):
+	get_db().table_metadata.insert_one({
+		"name": table_name, 
+		"path": table_path,
+		"bucket": table_bucket,
+		"column_count": column_count, 
+		"nodes": nodes
+	})
 
 
 def list_tables() -> List[Table]:
 	return list(get_db().table_metadata.find())
 
 
-def get_table(table_name: str) -> Table:
-	return get_db().table_metadata.find_one({"name": table_name})
+def get_table(table_path: str) -> Table:
+	return get_db().table_metadata.find_one({"path": table_path})
 
 
-def get_node_ids(table_name: str) -> Dict[str, str]:
-	return get_table(table_name)["nodes"]
+def table_exists(table_path: str) -> bool:
+	return get_table(table_path) != None
+
+
+def get_node_ids(table_path: str) -> Dict[str, str]:
+	return get_table(table_path)["nodes"]
 
 
 def purge():
