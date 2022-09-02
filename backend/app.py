@@ -106,13 +106,17 @@ class Purge(Resource):
 # TODO: metanome runs for all tables at once, consider running it only for specific tables - on hold for now
 # TODO: Refactor and add error checks (move the logic to another module)
 # TODO: Implement the algorithm for PK-FK and remove metanome
-@api.route('/profile-metanome/<path:bucket>')
+@api.route('/profile-metanome')
 @api.doc(description="Runs Metanome profiling for all tables, which is used to obtain KFK relations between the tables.")
+@api.doc(params={
+    'bucket':  {'description': 'Path to the S3 bucket with data', 'in': 'query', 'type': 'string', 'required': 'true', 'default': 'data'},
+})
 class ProfileMetanome(Resource):
     @api.response(200, 'Success')
     @api.response(404, 'Bucket does not exist')
     @api.response(500, 'Cannot connect to Metanome')
-    def get(self, bucket):
+    def get(self):
+        bucket = request.args.get('bucket')
         if not search.io_tools.bucket_exists(bucket):
             return Response("Bucket does not exist", 404)
         try:
