@@ -1,11 +1,10 @@
 import json
 import os
 
-
+# Format: IP, port
 def parse_ip(ip_string):
     split = ip_string.split(":")
     return split[0], int(split[1])
-
 
 # Format: (dependant_table_path/column, referenced_table_path/column)
 def parse_binder_results(data):
