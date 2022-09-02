@@ -28,15 +28,14 @@ from backend.utility.display import log_format
 logging.basicConfig(format=log_format, level=logging.INFO)
 
 
+TaskIdModel = api.model('TaskIdModel', {'task_id': fields.String, 'type': fields.String})
 @api.route('/ingest-data')
 @api.doc(description="Ingest all the data located at the given bucket.")
 @api.doc(params={
-    'bucket':  {'description': 'Path to the S3 bucket with data', 'in': 'query', 'type': 'string', 'required': 'true'},
+    'bucket':  {'description': 'Path to the S3 bucket with data', 'in': 'query', 'type': 'string', 'required': 'true', 'default': 'data'},
 })
 class IngestData(Resource):
-    @api.response(202, 'Success', api.model('IngestDataResponse', {
-        'task_id': fields.String, 
-    }))
+    @api.response(202, 'Success', TaskIdModel)
     @api.response(404, 'Bucket does not exist')
     @api.response(400, 'Bucket is empty')
     def get(self):
@@ -59,7 +58,7 @@ class IngestData(Resource):
         profiling_chord.parent.save()
         search.mongo_tools.store_celery_task_id(profiling_chord.parent.id, profiling_chord.id)
 
-        return Response(json.dumps({"task_id": profiling_chord.parent.id}), mimetype='application/json', status=202)
+        return Response(json.dumps({"task_id": profiling_chord.parent.id, "type": "Ingestion"}), mimetype='application/json', status=202)
 
 
 TaskStatusModel = api.model("TaskStatus", {
