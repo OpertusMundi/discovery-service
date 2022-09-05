@@ -13,7 +13,10 @@ from ..search import io_tools
 
 # return value to know if it succeed or not
 @celery.task
-def add_table(bucket, table_path):
+def add_table(bucket: str, table_path: str):
+    """
+    Adds a table in the given bucket and at the given table path to Daisy's databases.
+    """
     table_name = table_path.split('/')[-1]
     df = search.io_tools.get_df(bucket, table_path)
     # Split the dataframe into a new dataframe for each column
@@ -34,22 +37,31 @@ def add_table(bucket, table_path):
 
 
 @celery.task
-def profile_valentine_all(bucket):
+def profile_valentine_all(bucket: str):
+    """
+    Profiles all tables in the given bucket against each other.
+    """
     all_tables = io_tools.get_tables(bucket)
     for table_path_1, table_path_2 in itertools.combinations(all_tables, r=2):
         profile_valentine_pair(bucket, table_path_1, table_path_2)
 
 
 @celery.task
-def profile_valentine_star(bucket, table_path):
     all_tables = io_tools.get_tables(bucket)
     for other_table_path in all_tables:
         if table_path != other_table_path:
             profile_valentine_pair(bucket, table_path, other_table_path)
+def profile_valentine_star(bucket: str, table_path: str):
+    """
+    Profiles all tables in the given bucket against the given table.
+    """
 
 
 @celery.task
-def profile_valentine_pair(bucket, table_path_1, table_path_2):
+def profile_valentine_pair(bucket: str, table_path_1: str, table_path_2: str):
+    """
+    Profiles the two given tables in the given bucket against the given table.
+    """
     logging.info(f'Valentining files: {table_path_1}, {table_path_2}')
     rows_to_use = int(os.environ['VALENTINE_ROWS_TO_USE'])
     df1 = search.io_tools.get_df(bucket, table_path_1, rows=rows_to_use)

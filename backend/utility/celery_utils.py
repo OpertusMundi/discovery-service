@@ -1,13 +1,22 @@
-from backend import celery as celery_app
-from celery.result import AsyncResult, GroupResult
 import logging
+
+from celery.result import AsyncResult, GroupResult
+
+from typing import Dict, Union, Any
+
+from backend import celery as celery_app
 
 
 # Based on solution(s)/comments/source in: 
 # - https://github.com/celery/celery/issues/4516
 # - https://github.com/celery/celery/blob/v4.2.1/celery/canvas.py#L278
 # - https://github.com/celery/celery/blob/master/celery/result.py#L933
-def generate_status_tree(result):
+# TODO: Make this prettier someday (e.g. it sometimes shows duplicate tasks for chains)
+def generate_status_tree(result: Union[AsyncResult, GroupResult]) -> Dict[str, Any]:  # Recursive types unsupported yet in Python 3.7
+    """
+    Generates a dictionary-based tree with statuses and other metadata of results, 
+    starting from the given celery result.
+    """
     if isinstance(result, GroupResult):
         result = celery_app.GroupResult.restore(result.id)
 

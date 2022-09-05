@@ -20,7 +20,7 @@ def get_nodes():
 def get_node_by_prop(**kwargs):
     return node_helper.get_node(**kwargs)
 
-def get_related_nodes(node_id):
+def get_related_nodes(node_id: str):
     node = {'id': node_id}
     nodes = [node]
     related_nodes = []
@@ -47,7 +47,7 @@ def get_related_nodes(node_id):
     return related_nodes
 
 
-def get_joinable(table_name):
+def get_joinable(table_name: str):
     # Get all the nodes belonging to the given table
     nodes = node_helper.get_nodes_by_table_name(table_name)
     # Simplify the object (only keep the table path, column name and column id)
@@ -122,7 +122,7 @@ def get_related_between_two_tables(from_table: str, to_table: str) -> list:
     return all_links
 
 
-def get_siblings(node_id):
+def get_siblings(node_id: str):
     return node_helper.get_siblings(node_id)
 
 
