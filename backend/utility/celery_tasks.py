@@ -2,9 +2,6 @@ import itertools
 import logging
 import os
 import uuid
-from io import StringIO
-
-import pandas as pd
 
 from .. import search, profiling, discovery
 from backend import celery
@@ -18,13 +15,11 @@ from ..search import io_tools
 @celery.task
 def add_table(bucket, table_path):
     table_name = table_path.split('/')[-1]
-    csv_string = minio.minio_client.get_object(bucket, table_path).data.decode("utf-8")
-    df = pd.read_csv(StringIO(csv_string), header=0, engine="python", encoding="utf8", quotechar='"', escapechar='\\')
-
+    df = search.io_tools.get_df(bucket, table_path)
     # Split the dataframe into a new dataframe for each column
     logging.info(f"- Adding whole table metadata to neo4j")
     nodes = {}
-    for col in df.columns:
+    for col in df.columns: 
         node = discovery.crud.create_node(table_name, table_path, col)
         node_id = node[0]['id']
         nodes[col] = node_id
@@ -41,15 +36,26 @@ def add_table(bucket, table_path):
 @celery.task
 def profile_valentine_all(bucket):
     all_tables = io_tools.get_tables(bucket)
-    for table_pair in itertools.combinations(all_tables, r=2):
-        (tab1_path, tab2_path) = table_pair
-        csv_string = minio_client.get_object(bucket, tab1_path).data.decode("utf-8")
-        df_tab1 = pd.read_csv(StringIO(csv_string), header=0, engine="python", encoding="utf8", quotechar='"',
-                         escapechar='\\', nrows=1000)
-        logging.warning(f'Valentining files: {table_pair}')
-        csv_string = minio_client.get_object(bucket, tab2_path).data.decode("utf-8")
-        df_tab2 = pd.read_csv(StringIO(csv_string), header=0, engine="python", encoding="utf8", quotechar='"',
-                              escapechar='\\', nrows=1000)
-        matches = match(df_tab1, df_tab2)
-        process_match(tab1_path, tab2_path, matches)
+    for table_path_1, table_path_2 in itertools.combinations(all_tables, r=2):
+        profile_valentine_pair(bucket, table_path_1, table_path_2)
+
+
+@celery.task
+def profile_valentine_star(bucket, table_path):
+    all_tables = io_tools.get_tables(bucket)
+    for other_table_path in all_tables:
+        if table_path != other_table_path:
+            profile_valentine_pair(bucket, table_path, other_table_path)
+
+
+@celery.task
+def profile_valentine_pair(bucket, table_path_1, table_path_2):
+    logging.info(f'Valentining files: {table_path_1}, {table_path_2}')
+    rows_to_use = int(os.environ['VALENTINE_ROWS_TO_USE'])
+    df1 = search.io_tools.get_df(bucket, table_path_1, rows=rows_to_use)
+    df2 = search.io_tools.get_df(bucket, table_path_2, rows=rows_to_use)
+    matches = match(df1, df2)
+    process_match(table_path_1, table_path_2, matches)
+
+
 
