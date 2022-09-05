@@ -1,8 +1,8 @@
 from ..clients import mongodb
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from typing_extensions import TypedDict
 from pymongo.database import Database
-
+from ast import literal_eval
 
 class Table(TypedDict):
     name: str
@@ -14,13 +14,13 @@ def get_db() -> Database:
 	return mongodb.get_client()["db"]
 
 
-def store_celery_task_id(parent_id: str, task_id: str):
-	get_db().celery_tasks.insert_one({"parent_id": parent_id, "task_id": task_id})
+def save_celery_task(task_id: str, task_tuple: str):
+	get_db().celery_tasks.insert_one({"task_id": task_id, "task_tuple": str(task_tuple)})
 
 
-def get_celery_task_id(parent_id: str) -> str:
-	res = get_db().celery_tasks.find_one({"parent_id": parent_id})
-	return res["task_id"] if res else None
+def get_celery_task(task_id: str) -> Optional[tuple]:
+	res = get_db().celery_tasks.find_one({"task_id": task_id})
+	return literal_eval(res["task_tuple"]) if res else None
 
 
 def add_table(table_name: str, table_path: str, table_bucket: str, column_count: int, nodes: Dict[str, str]):
