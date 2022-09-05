@@ -2,8 +2,8 @@ import dask.dataframe as dd
 import pandas as pd
 
 from io import StringIO
+from minio.error import S3Error
 
-from minio.error import NoSuchKey
 # Typing
 from typing import List, Dict, Any
 
@@ -17,10 +17,13 @@ def table_exists(bucket: str, table_path: str) -> bool:
     Checks whether the table exists as object in the given bucket at the given path.
     """ 
     try:
-        minio.minio_client.stat_object(bucket, path)
+        minio.minio_client.stat_object(bucket, table_path)
         return True
-    except NoSuchKey:
-        return False
+    except S3Error as e:
+        if e.code == "NoSuchKey":
+            return False
+        else:
+            raise e
 
 
 def get_tables(bucket: str) -> List[str]:
