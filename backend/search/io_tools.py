@@ -1,6 +1,21 @@
 import dask.dataframe as dd
+import pandas as pd
+
+from io import StringIO
+
+from minio.error import NoSuchKey
+
 from ..clients import minio
 from ..clients import dask
+
+
+
+def table_exists(bucket, table_path):
+    try:
+        minio.minio_client.stat_object(bucket, path)
+        return True
+    except NoSuchKey:
+        return False
 
 
 def get_tables(bucket):
@@ -10,6 +25,25 @@ def get_tables(bucket):
 
 def bucket_exists(bucket):
     return minio.minio_client.bucket_exists(bucket)
+
+
+def get_df(bucket, path, rows=None):
+    res = minio.minio_client.get_object(bucket, path)
+    csv_string = res.data.decode("utf-8")
+    res.close()
+    res.release_conn()
+
+    df = pd.read_csv(
+        StringIO(csv_string), 
+        header=0, 
+        engine="python", 
+        encoding="utf8", 
+        quotechar='"',     
+        escapechar='\\', 
+        nrows=rows
+    )
+
+    return df
 
 
 def get_ddf(bucket, path):
