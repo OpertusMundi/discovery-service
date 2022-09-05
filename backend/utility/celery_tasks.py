@@ -6,9 +6,8 @@ import uuid
 from .. import search, profiling, discovery
 from backend import celery
 from ..clients import minio
-from ..clients.minio import minio_client
 from ..profiling.valentine import match, process_match
-from ..search import io_tools
+from ..search import io_tools, mongo_tools
 
 
 # return value to know if it succeed or not
@@ -47,14 +46,14 @@ def profile_valentine_all(bucket: str):
 
 
 @celery.task
-    all_tables = io_tools.get_tables(bucket)
-    for other_table_path in all_tables:
-        if table_path != other_table_path:
-            profile_valentine_pair(bucket, table_path, other_table_path)
 def profile_valentine_star(bucket: str, table_path: str):
     """
     Profiles all tables in the given bucket against the given table.
     """
+    all_tables = mongo_tools.list_tables(bucket=bucket)
+    for other in all_tables:
+        if table_path != other["path"]:
+            profile_valentine_pair(bucket, table_path, other["path"])
 
 
 @celery.task
