@@ -82,16 +82,3 @@ def get_ddf(bucket: str, table_path: str) -> dd.DataFrame:
     )
 
     return ddf
-
-
-def get_unique_values(ddf):
-    ddf = ddf.select_dtypes(exclude=['number'])  # Drop numerics, no need to search these in ES
-
-    # This might still cause memory issues for very large DFs
-    # TODO: Dump to disk and read from there
-    get_unique = lambda s: s.unique().compute()
-
-    futures = dask.get_client().map(get_unique, [ddf[col] for col in ddf.columns])
-    results = dask.get_client().gather(futures)
-
-    return dict(zip(ddf.columns, results))

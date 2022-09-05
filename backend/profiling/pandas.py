@@ -53,21 +53,6 @@ def get_profile(df: pd.DataFrame, name: str, python_types: bool=True) -> Dict[st
     profile = {}
     for column_name in df.columns:
         profile[f"{name}/{column_name}"] = get_profile_column(df[column_name], python_types=python_types)
-    return
-
-
-# def get_profile(ddf, ddf_name):
-#     profile = {}
-#     futures = {}
-#
-#     functions = list(pm.__dict__.items())
-#     for name, function in functions:
-#         futures[name] = dask.get_client().map(decorate(function, name), [ddf[col] for col in ddf.columns])
-#
-#     for name, _ in functions:
-#         profile[name] = dask.get_client().gather(futures[name])
-#
-#     return pd.DataFrame.from_dict(profile, orient='index', columns=ddf.columns)
     return profile
 
 
