@@ -1,10 +1,12 @@
 import logging
 
+from typing import List, Dict, Union
+
 from backend.utility.display import log_format
 logging.basicConfig(format=log_format, level=logging.INFO)
 
 
-def process_relation(base_table, result):
+def process_relation(base_table: str, result: List[Dict[str, str]]) -> List[Dict[str, Union[Dict[str,str],str]]]:
     tables = []
     assets = []
     for relation in result:
@@ -34,5 +36,5 @@ def process_relation(base_table, result):
     return tables
 
 
-def process_node(result):
+def process_node(result: List[Dict[str, str]]) -> List[Dict[str, str]]:
     return list(map(lambda x: {'table': x.get('source_path'), 'column': x.get('name'), 'id': x.get('id')}, result))

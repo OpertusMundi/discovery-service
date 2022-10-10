@@ -1,12 +1,12 @@
 import os
 
-from neo4j import GraphDatabase
+from neo4j import GraphDatabase, Neo4jDriver
 
 
-neo4j_client = None
+neo4j_client: Neo4jDriver = None
 
 
-def get_client():
+def get_client() -> Neo4jDriver:
     global neo4j_client
 
     if neo4j_client is None:
