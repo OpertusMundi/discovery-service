@@ -1,11 +1,9 @@
 import itertools
 import logging
 import os
-import uuid
 
-from .. import search, profiling, discovery
 from backend import celery
-from ..clients import minio
+from .. import search, profiling, discovery
 from ..profiling.valentine import match, process_match
 from ..search import io_tools, mongo_tools
 
@@ -21,7 +19,7 @@ def add_table(bucket: str, table_path: str):
     # Split the dataframe into a new dataframe for each column
     logging.info(f"- Adding whole table metadata to neo4j")
     nodes = {}
-    for col in df.columns: 
+    for col in df.columns:
         node = discovery.crud.create_node(table_name, table_path, col)
         node_id = node[0]['id']
         nodes[col] = node_id
@@ -67,6 +65,3 @@ def profile_valentine_pair(bucket: str, table_path_1: str, table_path_2: str):
     df2 = search.io_tools.get_df(bucket, table_path_2, rows=rows_to_use)
     matches = match(df1, df2)
     process_match(table_path_1, table_path_2, matches)
-
-
-

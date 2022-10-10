@@ -125,4 +125,3 @@ def _shortest_path_between_tables(tx, from_table, to_table):
     for record in tx_result:
         result.append(record['p'])
     return result
-

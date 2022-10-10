@@ -1,18 +1,14 @@
-import os
-import pandas as pd
-
 from typing import Any
 
+import pandas as pd
 from sherlock.deploy.model import SherlockModel
-from sherlock.features.paragraph_vectors import initialise_pretrained_model, initialise_nltk
-from sherlock.features.preprocessing import prepare_feature_extraction
-from sherlock.features.word_embeddings import initialise_word_embeddings
 
 
 class ProfileSherlock:
     """
     Class used for executing Sherlock profiles.
-    """ 
+    """
+
     def __init__(self):
         self.model: SherlockModel = None
         self.init_sherlock()
@@ -30,5 +26,3 @@ class ProfileSherlock:
 
         self.model = SherlockModel()
         self.model.initialize_model_from_json(with_weights=True, model_id="sherlock")
-
-

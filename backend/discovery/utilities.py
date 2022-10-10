@@ -1,12 +1,12 @@
 import logging
-
 from typing import List, Dict, Union
 
 from backend.utility.display import log_format
+
 logging.basicConfig(format=log_format, level=logging.INFO)
 
 
-def process_relation(base_table: str, result: List[Dict[str, str]]) -> List[Dict[str, Union[Dict[str,str],str]]]:
+def process_relation(base_table: str, result: List[Dict[str, str]]) -> List[Dict[str, Union[Dict[str, str], str]]]:
     tables = []
     assets = []
     for relation in result:

@@ -24,7 +24,7 @@ celery = Celery(app.name, broker_url=f"amqp://{os.environ['RABBITMQ_DEFAULT_USER
                 include=['backend.utility.celery_tasks'],
                 task_track_started=True,  # Makes sure task status changes to "STARTED"
                 result_extended=True  # Also stores args, task name, task children, etc into backend
-        )
+                )
 
 # Important to set, otherwise weird race-conditions with backend retrieval will occur
 # See: https://stackoverflow.com/questions/26527214/why-celery-current-app-refers-the-default-instance-inside-flask-view-functions

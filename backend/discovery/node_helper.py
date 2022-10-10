@@ -1,5 +1,5 @@
-from ..clients import neo4j as neo
 from . import relation_types
+from ..clients import neo4j as neo
 
 
 def create_node(source, source_path, label):
@@ -7,10 +7,12 @@ def create_node(source, source_path, label):
         node = session.write_transaction(_create_node, source, source_path, label)
     return node
 
+
 def set_profiling_props(node_id, **kwargs):
     with neo.get_client().session() as session:
         node = session.write_transaction(_set_profiling_properties, node_id, **kwargs)
     return node
+
 
 def get_all():
     with neo.get_client().session() as session:
@@ -23,6 +25,7 @@ def get_node(**kwargs):
         node = session.write_transaction(_get_node, **kwargs)
     return node
 
+
 def get_related_nodes(node_id):
     with neo.get_client().session() as session:
         nodes = session.write_transaction(_get_related_nodes, node_id)
@@ -33,6 +36,7 @@ def get_joinable(node_id):
     with neo.get_client().session() as session:
         nodes = session.write_transaction(_get_joinable, node_id)
     return nodes
+
 
 def get_siblings(node_id):
     with neo.get_client().session() as session:
@@ -45,25 +49,30 @@ def get_nodes_by_table_name(source_name):
         nodes = session.write_transaction(_get_nodes_by_table_name, source_name)
     return nodes
 
+
 def delete_property(property_to_delete, **kwargs):
     with neo.get_client().session() as session:
         node = session.write_transaction(_delete_property, property_to_delete, **kwargs)
     return node
+
 
 def delete_all_properties(node_id):
     with neo.get_client().session() as session:
         node = session.write_transaction(_delete_all_properties, node_id)
     return node
 
+
 def delete_relation(node_id, relation):
     with neo.get_client().session() as session:
         node = session.write_transaction(_delete_relation_from_node, node_id, relation)
     return node
 
+
 def delete_node_and_all_relations(node_id):
     with neo.get_client().session() as session:
         node = session.write_transaction(_delete_node_and_all_relations, node_id)
     return node
+
 
 def delete_all():
     with neo.get_client().session() as session:
@@ -95,7 +104,7 @@ def _get_siblings(tx, node_id):
 
 def _get_joinable(tx, node_id):
     tx_result = tx.run(f"MATCH (a:Node)-[r:{relation_types.FOREIGN_KEY_METANOME}]-(b:Node) "
-                       "WHERE a.id = $node_id " 
+                       "WHERE a.id = $node_id "
                        "RETURN b, r as result", node_id=node_id)
 
     result = []
@@ -106,7 +115,7 @@ def _get_joinable(tx, node_id):
 
 def _get_related_nodes(tx, node_id):
     tx_result = tx.run("MATCH (a:Node)-[r:MATCH]-(b:Node) "
-                       "WHERE a.id = $node_id " 
+                       "WHERE a.id = $node_id "
                        "RETURN b, r as result", node_id=node_id)
     result = []
     for record in tx_result:
@@ -154,7 +163,7 @@ def _get_node(tx, **kwargs):
     where_query = ''
     for i, key in enumerate(kwargs.keys()):
         where_query += 'WHERE n.{} = ${} '.format(key, key)
-        if i < len(kwargs.keys())-1:
+        if i < len(kwargs.keys()) - 1:
             where_query += ' AND '
 
     tx_result = tx.run("MATCH (n:Node) {} RETURN n as node".format(where_query), **kwargs)
@@ -203,4 +212,3 @@ def _delete_all(tx):
     result = tx.run("MATCH (n)"
                     "DETACH DELETE n")
     return result.single()
-

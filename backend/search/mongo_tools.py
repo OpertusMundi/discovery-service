@@ -1,14 +1,12 @@
 import logging
-
 from ast import literal_eval
-
 # Typing
-from typing import Any, Dict, List, Optional
-from typing_extensions import TypedDict
+from typing import Dict, List, Optional
+
 from pymongo.database import Database
+from typing_extensions import TypedDict
 
 from ..clients import mongodb
-
 
 
 class Table(TypedDict):
@@ -45,12 +43,12 @@ def get_celery_task(task_id: str) -> Optional[tuple]:
 def add_table(table_name: str, table_path: str, table_bucket: str, column_count: int, nodes: Dict[str, str]) -> None:
     """
     Adds a table with some useful metadata to the database.
-    """ 
+    """
     get_db().table_metadata.insert_one({
-        "name": table_name, 
+        "name": table_name,
         "path": table_path,
         "bucket": table_bucket,
-        "column_count": column_count, 
+        "column_count": column_count,
         "nodes": nodes
     })
 
@@ -60,7 +58,7 @@ def list_tables(bucket=None) -> List[Table]:
     Lists all tables in the given bucket that have metadata (meaning they were ingested).
 
     If the bucket is 'None', all tables are returned.
-    """ 
+    """
     col = get_db().table_metadata
     if bucket:
         return list(col.find({"bucket": bucket}))
@@ -70,21 +68,21 @@ def list_tables(bucket=None) -> List[Table]:
 def get_table(table_path: str) -> Optional[Table]:
     """
     Gets table metadata given the table path, or None if nothing was found.
-    """ 
+    """
     return get_db().table_metadata.find_one({"path": table_path})
 
 
 def table_exists(table_path: str) -> bool:
     """
     Checks whether there is any table metadata for the given table path.
-    """ 
+    """
     return get_table(table_path) != None
 
 
 def get_node_ids(table_path: str) -> Dict[str, str]:
     """
     Gets the node ids belonging to the table for the given path.
-    """ 
+    """
     res = get_table(table_path)
     if not res:
         logging.warn(f"Could not find metadata for table at {table_path}!")
@@ -94,6 +92,6 @@ def get_node_ids(table_path: str) -> Dict[str, str]:
 def purge() -> None:
     """
     Purges the database from all data.
-    """ 
+    """
     get_db().table_metadata.drop()
     get_db().celery_tasks.drop()

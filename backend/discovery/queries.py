@@ -1,13 +1,9 @@
 import logging
-from os import listdir
-from os.path import isfile, join
 
-import pandas as pd
 import numpy as np
-from neo4j import GraphDatabase
 
-from . import node_helper
 from . import edge_helper
+from . import node_helper
 from .edge_helper import shortest_path_between_tables
 from .relation_types import MATCH
 from .utilities import process_relation, process_node
@@ -19,6 +15,7 @@ def get_nodes():
 
 def get_node_by_prop(**kwargs):
     return node_helper.get_node(**kwargs)
+
 
 def get_related_nodes(node_id: str):
     node = {'id': node_id}
@@ -65,13 +62,15 @@ def get_joinable(table_name: str):
             for related_table in tables:
                 related_table_name = related_table["table_name"]
                 if related_table_name not in joinable_tables:
-                    joinable_tables[related_table_name] = {"matches" : []}
-                related_table.pop("table_name") # We move this one level up
-                joinable_tables[related_table_name]["matches"].append(related_table) 
+                    joinable_tables[related_table_name] = {"matches": []}
+                related_table.pop("table_name")  # We move this one level up
+                joinable_tables[related_table_name]["matches"].append(related_table)
                 joinable_tables[related_table_name]["table_name"] = related_table_name
-            joinable_tables[related_table_name]["matches"] = list(sorted(joinable_tables[related_table_name]["matches"], key=lambda x : -x["RELATED"]["coma"]))
+            joinable_tables[related_table_name]["matches"] = list(
+                sorted(joinable_tables[related_table_name]["matches"], key=lambda x: -x["RELATED"]["coma"]))
 
-    joinable_tables_sorted = sorted(list(joinable_tables.values()), key=lambda x: (-len(x["matches"]), -np.mean([x["RELATED"]["coma"] for x in x["matches"]])))
+    joinable_tables_sorted = sorted(list(joinable_tables.values()), key=lambda x: (
+    -len(x["matches"]), -np.mean([x["RELATED"]["coma"] for x in x["matches"]])))
 
     return joinable_tables_sorted
 
@@ -124,10 +123,3 @@ def get_related_between_two_tables(from_table: str, to_table: str) -> list:
 
 def get_siblings(node_id: str):
     return node_helper.get_siblings(node_id)
-
-
-
-
-
-
-

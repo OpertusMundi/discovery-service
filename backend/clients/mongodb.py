@@ -4,7 +4,6 @@ from pymongo import MongoClient
 
 from ..utility.parsing import parse_ip
 
-
 mongo_client: MongoClient = None
 
 

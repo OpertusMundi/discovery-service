@@ -1,9 +1,8 @@
 import os
-import pandas as pd
-
-from valentine.algorithms import Coma
-
 from typing import Dict, Any, Tuple
+
+import pandas as pd
+from valentine.algorithms import Coma
 
 from backend.discovery import relation_types
 from backend.discovery.crud import create_relation, set_relation_properties

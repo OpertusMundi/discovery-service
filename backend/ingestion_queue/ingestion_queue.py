@@ -1,8 +1,10 @@
-import sys
-import pika
 import json
 import logging
+import sys
+
+import pika
 import requests
+
 logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
 
 sys.path.append("..")

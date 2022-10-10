@@ -2,7 +2,6 @@ import os
 
 from neo4j import GraphDatabase, Neo4jDriver
 
-
 neo4j_client: Neo4jDriver = None
 
 
