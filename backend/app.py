@@ -239,10 +239,10 @@ class GetTableCSV(Resource):
     @api.response(400, 'Missing table path, rows or bucket query parameters')
     @api.response(404, 'Bucket or table does not exist')
     def get(self):
-        bucket_path = request.args.get('bucket')
+        bucket = request.args.get('bucket')
         table_path = request.args.get('table_path')
-        rows = request.args.get('rows')
-        if not bucket_path or not table_path or not rows:
+        rows = request.args.get('rows', type=int)
+        if not bucket or not table_path or not rows:
             return Response('Missing table path, rows or bucket query parameters', status=400)
 
         if not search.io_tools.bucket_exists(bucket):
