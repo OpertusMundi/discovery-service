@@ -13,7 +13,8 @@ services:
      image: rabbitmq:3.8-management
      restart: always
      env_file:
-       - .env
+        - .env
+        - .config
      ports:
        - "5672:5672"
        - "15672:15672"
@@ -27,6 +28,7 @@ services:
       - neo4jdata:/data
     env_file:
       - .env
+      - .config
 
   api:
     build: ./backend
@@ -37,7 +39,7 @@ services:
       - neo4j
       - minio
     volumes:
-      - ./backend:/backend
+      - data:/data
     command:  sh -c "./wait && ./start.sh"
     restart: always
     tty: true
@@ -47,60 +49,42 @@ services:
       PYTHONUNBUFFERED: 1
     env_file:
       - .env
+      - .config
 
   # Celery worker that does schema matching jobs
   celery-worker:
     build: ./backend
     volumes:
-      - ./backend:/backend
+      - data:/data
     restart: always
     environment:
       - PYTHONUNBUFFERED=1
     env_file:
       - .env
-    # Polling is required because inotify does not work on subfolders of bind mounts
-    command: watchmedo auto-restart --debug-force-polling -d /backend/utility/celery_tasks.py -d /backend/__init__.py -- celery -A backend.celery worker -l INFO --concurrency=1
+      - .config
+    command: celery -A backend.celery worker -l INFO --concurrency=1
     depends_on:
       - rabbitmq
 
-  # Celery Flower dashboard
-  celery-flower:
-    build: ./backend
-    volumes:
-      - ./backend:/backend
-    command: "celery -A backend.celery flower --broker_api=http://rabbitmq:rabbitmq@rabbitmq:15672/api/"
-    restart: always
-    environment:
-      - FLOWER_PORT=5555
-    env_file:
-      - .env
-    ports:
-      - "5555:5555"
-    depends_on:
-      - rabbitmq
-      - celery-worker
-
+  # In-memory store with persistence used for storing celery task information/statuses
   redis:
-    image: redis:latest
+    image: redis-stack-server:latest
     env_file:
       - .env
+      - .config
     command: redis-server --requirepass redis --maxmemory 512mb
     ports:
       - "6379:6379"
+    volumes:
+      - redisdata:/data
 
   # Profiler which determines the primary-key foreign-key constraints
   metanome:
-   # base_image: # Only supported in docker-compose 3.9...
-   #   profiles:
-   #     - metanome
    build: ./metanome
    expose:
      - 443
    ports:
      - "8080:8080"
-   volumes:
-     - ./metanome/src:/src
-     - ./metanome/logs:/logs
    command:  sh -c "./start"
    restart: always
    tty: true
@@ -109,21 +93,10 @@ services:
      WAIT_HOSTS: mongo:27017, elastic:9200, neo4j:7474, neo4j:7687
    env_file:
      - .env
-
-  # S3-like object store holding the data that we want to match
-  minio:
-    image: "minio/minio"
-    command: minio server --console-address :9001 /data
-    restart: always
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - "miniodata:/data"
-    env_file:
-      - .env
+     - .config
 
 volumes:
-  miniodata:
   mongodbdata:
   neo4jdata:
+  redisdata:
+  data:
