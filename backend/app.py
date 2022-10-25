@@ -16,6 +16,7 @@ from backend.profiling.metanome import profile_metanome
 from backend.utility.celery_tasks import *
 from backend.utility.celery_utils import generate_status_tree
 from backend.utility.display import log_format
+from backend.search import redis_tools as db
 
 # Display/logging settings
 logging.basicConfig(format=log_format, level=logging.INFO)
@@ -48,7 +49,7 @@ class IngestData(Resource):
 
         header = []
         for table_path in paths:
-            if not search.mongo_tools.get_table(table_path):
+            if not db.get_table(table_path):
                 header.append(add_table.s(bucket, table_path))
             else:
                 logging.info(f"Table {table_path} was already processed!")
@@ -56,7 +57,7 @@ class IngestData(Resource):
         task_group = group(*header)
         profiling_chord = chord(task_group)(profile_valentine_all.si(bucket))
         profiling_chord.parent.save()
-        search.mongo_tools.save_celery_task(profiling_chord.id, profiling_chord.as_tuple())
+        db.save_celery_task(profiling_chord.id, profiling_chord.as_tuple())
 
         return Response(json.dumps({"task_id": profiling_chord.id, "type": "Ingestion"}), mimetype='application/json',
                         status=202)
@@ -91,7 +92,7 @@ class TaskStatus(Resource):
         if not task_id:
             return Response("Missing task id query parameter", status=400)
 
-        result_tuple = search.mongo_tools.get_celery_task(task_id)
+        result_tuple = db.get_celery_task(task_id)
         if not result_tuple:
             return Response("Task does not exist", status=404)
 
@@ -107,7 +108,7 @@ class TaskStatus(Resource):
 class Purge(Resource):
     @api.response(200, 'Success')
     def get(self):
-        search.mongo_tools.purge()
+        db.purge()
         discovery.crud.delete_all_nodes()
         return Response('Success', status=200)
 
@@ -183,11 +184,11 @@ class ProfileValentine(Resource):
         if not search.io_tools.table_exists(bucket, table_path):
             return Response("Table does not exist", status=404)
 
-        if not search.mongo_tools.table_exists(table_path):
+        if not db.table_exists(table_path):
             return Response("Table has not been ingested yet", status=403)
 
         task = profile_valentine_star.delay(bucket, table_path)
-        search.mongo_tools.save_celery_task(task.id, task.as_tuple())
+        db.save_celery_task(task.id, task.as_tuple())
 
         return Response(json.dumps({"task_id": task.id, "type": "Valentine Profiling"}), mimetype='application/json',
                         status=202)
@@ -217,11 +218,11 @@ class AddTable(Resource):
         if not search.io_tools.table_exists(bucket, table_path):
             return Response("Table does not exist", status=404)
 
-        if search.mongo_tools.get_table(table_path):
+        if db.get_table(table_path):
             return Response("Table was already processed", status=204)
 
         task = (add_table.si(bucket, table_path) | profile_valentine_star.si(bucket, table_path)).apply_async()
-        search.mongo_tools.save_celery_task(task.id, task.as_tuple())
+        db.save_celery_task(task.id, task.as_tuple())
 
         return Response(json.dumps({"task_id": task.id, "type": "Single Ingestion"}), mimetype='application/json',
                         status=202)
@@ -335,4 +336,8 @@ class GetJoinable(Resource):
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=443)
+    production = True if os.environ["DAISY_PRODUCTION"]=="true" else False
+    if production:
+        app.run(host='0.0.0.0', port=443)
+    else:
+        app.run(host='0.0.0.0', port=443, debug=True)

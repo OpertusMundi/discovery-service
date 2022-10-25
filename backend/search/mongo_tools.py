@@ -7,15 +7,7 @@ from pymongo.database import Database
 from typing_extensions import TypedDict
 
 from ..clients import mongodb
-
-
-class Table(TypedDict):
-    """
-    Intended for typing usecases.
-    """
-    name: str
-    column_count: int
-    nodes: Dict[str, str]
+from ..utility.typing import Table
 
 
 def get_db() -> Database:

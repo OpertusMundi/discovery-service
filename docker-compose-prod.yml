@@ -1,13 +1,5 @@
 version: "3.3"
 services:
-  mongo:
-    image: mongo
-    expose:
-      - 27017
-    command: --quiet
-    volumes:
-      - mongodbdata:/data/db
-
   # Message queue required by Celery
   rabbitmq:
      image: rabbitmq:3.8-management
@@ -35,7 +27,6 @@ services:
     ports:
       - "443:443"
     depends_on:
-      - mongo
       - neo4j
       - minio
     volumes:
@@ -45,7 +36,7 @@ services:
     tty: true
     privileged: true
     environment:
-      WAIT_HOSTS: mongo:27017, neo4j:7474, neo4j:7687, minio:9000
+      WAIT_HOSTS: neo4j:7474, neo4j:7687, minio:9000
       PYTHONUNBUFFERED: 1
     env_file:
       - .env
@@ -68,11 +59,12 @@ services:
 
   # In-memory store with persistence used for storing celery task information/statuses
   redis:
-    image: redis-stack-server:latest
+    image: redis/redis-stack-server:latest
+    environment:
+      - REDIS_ARGS=--maxmemory 512mb --requirepass redis
     env_file:
       - .env
       - .config
-    command: redis-server --requirepass redis --maxmemory 512mb
     ports:
       - "6379:6379"
     volumes:
@@ -90,13 +82,12 @@ services:
    tty: true
    privileged: true
    environment:
-     WAIT_HOSTS: mongo:27017, elastic:9200, neo4j:7474, neo4j:7687
+     WAIT_HOSTS: elastic:9200, neo4j:7474, neo4j:7687
    env_file:
      - .env
      - .config
 
 volumes:
-  mongodbdata:
   neo4jdata:
   redisdata:
   data:

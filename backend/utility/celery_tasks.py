@@ -5,7 +5,8 @@ import os
 from backend import celery
 from .. import search, profiling, discovery
 from ..profiling.valentine import match, process_match
-from ..search import io_tools, mongo_tools
+from ..search import io_tools
+from ..search import redis_tools as db
 
 
 # return value to know if it succeed or not
@@ -30,7 +31,7 @@ def add_table(bucket: str, table_path: str):
 
     logging.info(f"- Adding ingestion record to mongodb")
 
-    search.mongo_tools.add_table(table_name, table_path, bucket, len(df.columns), nodes)
+    db.add_table(table_name, table_path, bucket, len(df.columns), nodes)
 
 
 @celery.task

@@ -12,7 +12,7 @@ valentine==0.1.4
 celery==5.2.3
 # flower
 flower==1.0.0
-redis==4.1.2
+redis==4.3.4
 # sherlock
 gdown==4.3.0
 pyarrow==2.0.0
