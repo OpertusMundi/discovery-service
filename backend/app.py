@@ -97,7 +97,7 @@ class TaskStatus(Resource):
             return Response("Task does not exist", status=404)
 
         result = result_from_tuple(result_tuple)
-        if result == None:
+        if result is None:
             return Response("Task could not be loaded from backend", status=500)
 
         return Response(json.dumps(generate_status_tree(result)), mimetype='application/json', status=200)
@@ -336,7 +336,7 @@ class GetJoinable(Resource):
 
 
 if __name__ == "__main__":
-    production = True if os.environ["DAISY_PRODUCTION"]=="true" else False
+    production = True if os.environ["DAISY_PRODUCTION"] == "true" else False
     if production:
         app.run(host='0.0.0.0', port=443)
     else:
