@@ -65,7 +65,3 @@ def convert_file_input_to_execution(obj_file_input):
     exec_file_input = load_json_template("execution_file_input")
     exec_file_input["fileName"] = obj_file_input["fileName"]
     return exec_file_input
-
-
-def create_file_input_test():
-    return load_json_template("test")

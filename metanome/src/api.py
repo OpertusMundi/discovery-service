@@ -29,10 +29,8 @@ def index():
 @app.route("/run_binder/<path:bucket>")
 def run_binder(bucket):
     # Need to make sure to delete existing inputs
-    logging.info("GETTING INPUT")
     inputs = requests.get(f"http://{METANOME_ADDRESS}/api/file-inputs").json()
     for inp in inputs:
-        logging.info("--DELETING INPUT")
         requests.delete(f"http://{METANOME_ADDRESS}/api/file-inputs/delete/{inp['id']}")
 
     path = Path(METANOME_DATA_PATH) / bucket

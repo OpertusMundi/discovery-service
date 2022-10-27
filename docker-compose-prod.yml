@@ -75,7 +75,7 @@ services:
    expose:
      - 443
    volumes:
-     - data:/data
+     - data:/metanome/backend/WEB-INF/classes/inputData
    command:  sh -c "./start"
    restart: always
    tty: true
