@@ -1,6 +1,7 @@
 version: "3.3"
 services:
-  # Message queue required by Celery
+  
+  # Message queue required by Celery for distributed messaging between the workers
   rabbitmq:
      image: rabbitmq:3.8-management
      restart: always
@@ -10,6 +11,7 @@ services:
        - "5672:5672"
        - "15672:15672"
 
+  # Graph database used for discovery
   neo4j:
     image: neo4j
     ports:
@@ -51,7 +53,7 @@ services:
       - data:/data
     restart: always
     environment:
-      - PYTHONUNBUFFERED=1
+      PYTHONUNBUFFERED: 1
     env_file:
       - .env
     # Polling is required because inotify does not work on subfolders of bind mounts
@@ -59,7 +61,7 @@ services:
     depends_on:
       - rabbitmq
 
-  # Celery Flower dashboard
+  # Dashboard for Celery
   celery-flower:
     build: ./backend
     volumes:
@@ -67,7 +69,7 @@ services:
     command: "celery -A backend.celery flower --broker_api=http://rabbitmq:rabbitmq@rabbitmq:15672/api/"
     restart: always
     environment:
-      - FLOWER_PORT=5555
+      FLOWER_PORT: 5555
     env_file:
       - .env
     ports:
@@ -76,10 +78,11 @@ services:
       - rabbitmq
       - celery-worker
 
+  # In-memory store with persistence used for storing daisy table metadata and celery task information/statuses
   redis:
     image: redis/redis-stack:latest
     environment:
-      - REDIS_ARGS=--maxmemory 512mb --requirepass redis
+      REDIS_ARGS: --maxmemory 512mb --requirepass redis
     env_file:
       - .env
     ports:

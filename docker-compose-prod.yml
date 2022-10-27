@@ -1,15 +1,16 @@
 version: "3.3"
 services:
-  # Message queue required by Celery
+
+  # Message queue required by Celery for distributed messaging between the workers
   rabbitmq:
-     image: rabbitmq:3.8-management
+     image: rabbitmq:3.8
      restart: always
      env_file:
         - .env
      expose:
        - 5672
-       - 15672
 
+  # Graph database used for discovery
   neo4j:
     image: neo4j
     expose:
@@ -20,6 +21,7 @@ services:
     env_file:
       - .env
 
+  # API for public access
   api:
     build: ./backend
     ports:
@@ -45,18 +47,18 @@ services:
       - data:/data
     restart: always
     environment:
-      - PYTHONUNBUFFERED=1
+      PYTHONUNBUFFERED: 1
     env_file:
       - .env
     command: celery -A backend.celery worker -l INFO --concurrency=1
     depends_on:
       - rabbitmq
 
-  # In-memory store with persistence used for storing celery task information/statuses
+  # In-memory store with persistence used for storing daisy table metadata and celery task information/statuses
   redis:
     image: redis/redis-stack-server:latest
     environment:
-      - REDIS_ARGS=--maxmemory 512mb --requirepass redis
+      REDIS_ARGS: --maxmemory 512mb --requirepass redis
     env_file:
       - .env
     expose:
