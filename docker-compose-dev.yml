@@ -32,13 +32,15 @@ services:
       - ./backend:/backend
       - ./backend/logs:/logs
       - data:/data
-    command:  sh -c "./wait && ./start.sh"
+
+    command:  sh -c "./wait && watchmedo auto-restart --debug-force-polling -d /backend/app.py -- ./start.sh"
     restart: always
     tty: true
     privileged: true
     environment:
       WAIT_HOSTS: neo4j:7474, neo4j:7687
       PYTHONUNBUFFERED: 1
+      FLASK_ENV: development
     env_file:
       - .env
       - .config
