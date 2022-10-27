@@ -336,8 +336,4 @@ class GetJoinable(Resource):
 
 
 if __name__ == "__main__":
-    production = True if os.environ["DAISY_PRODUCTION"] == "true" else False
-    if production:
-        app.run(host='0.0.0.0', port=443)
-    else:
-        app.run(host='0.0.0.0', port=443, debug=True)
+    app.run(host='0.0.0.0', port=443)

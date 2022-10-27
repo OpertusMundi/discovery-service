@@ -7,7 +7,7 @@ from flask_restx import Api
 
 # Flask configuration
 app = Flask(__name__)
-app.debug = True
+app.debug = False if os.environ["DAISY_PRODUCTION"] == "true" else True
 app.secret_key = os.urandom(24)
 
 # Swagger configuration
