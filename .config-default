@@ -1,5 +1,2 @@
 # Self-explanatory [false|true]
 DAISY_PRODUCTION=false
-
-# Whether to purge the volumes [false|true]
-DAISY_PURGE=false

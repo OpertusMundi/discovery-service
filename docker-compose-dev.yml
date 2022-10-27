@@ -28,16 +28,16 @@ services:
       - "443:443"
     depends_on:
       - neo4j
-      - minio
     volumes:
       - ./backend:/backend
       - ./backend/logs:/logs
+      - data:/data
     command:  sh -c "./wait && ./start.sh"
     restart: always
     tty: true
     privileged: true
     environment:
-      WAIT_HOSTS: neo4j:7474, neo4j:7687, minio:9000
+      WAIT_HOSTS: neo4j:7474, neo4j:7687
       PYTHONUNBUFFERED: 1
     env_file:
       - .env
@@ -92,9 +92,6 @@ services:
 
   # Profiler which determines the primary-key foreign-key constraints
   metanome:
-   # base_image: # Only supported in docker-compose 3.9...
-   #   profiles:
-   #     - metanome
    build: ./metanome
    expose:
      - 443
@@ -108,26 +105,12 @@ services:
    tty: true
    privileged: true
    environment:
-     WAIT_HOSTS: elastic:9200, neo4j:7474, neo4j:7687
+     WAIT_HOSTS: neo4j:7474, neo4j:7687
    env_file:
      - .env
      - .config
 
-  # S3-like object store holding the data that we want to match
-  minio:
-    image: "minio/minio"
-    command: minio server --console-address :9001 /data
-    restart: always
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - "miniodata:/data"
-    env_file:
-      - .env
-      - .config
-
 volumes:
-  miniodata:
   redisdata:
   neo4jdata:
+  data:

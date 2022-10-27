@@ -28,7 +28,6 @@ services:
       - "443:443"
     depends_on:
       - neo4j
-      - minio
     volumes:
       - data:/data
     command:  sh -c "./wait && ./start.sh"
@@ -36,7 +35,7 @@ services:
     tty: true
     privileged: true
     environment:
-      WAIT_HOSTS: neo4j:7474, neo4j:7687, minio:9000
+      WAIT_HOSTS: neo4j:7474, neo4j:7687
       PYTHONUNBUFFERED: 1
     env_file:
       - .env
@@ -82,7 +81,7 @@ services:
    tty: true
    privileged: true
    environment:
-     WAIT_HOSTS: elastic:9200, neo4j:7474, neo4j:7687
+     WAIT_HOSTS: neo4j:7474, neo4j:7687
    env_file:
      - .env
      - .config
