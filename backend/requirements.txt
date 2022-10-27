@@ -29,4 +29,4 @@ watchdog==2.1.9
 typing-extensions==4.3.0
 werkzeug==2.1.2
 importlib_metadata<5.0
-
+waitress==2.1.2

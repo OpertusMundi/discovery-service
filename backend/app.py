@@ -336,4 +336,9 @@ class GetJoinable(Resource):
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=443)
+    if app.debug:
+        app.run(host='0.0.0.0', port=443)
+    else:
+        from waitress import serve
+        serve(app, host="0.0.0.0", port=443)
+
