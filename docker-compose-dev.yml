@@ -48,6 +48,7 @@ services:
     build: ./backend
     volumes:
       - ./backend:/backend
+      - data:/data
     restart: always
     environment:
       - PYTHONUNBUFFERED=1
@@ -100,6 +101,7 @@ services:
    volumes:
      - ./metanome/src:/src
      - ./metanome/logs:/logs
+     - data:/data
    command:  sh -c "./start"
    restart: always
    tty: true

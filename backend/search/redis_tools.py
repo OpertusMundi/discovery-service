@@ -1,12 +1,13 @@
 import logging
+import json
+
 from ast import literal_eval
 # Typing
 from typing import Dict, List, Optional
-from typing_extensions import TypedDict
 
 # Redis
 from redis.commands.json.path import Path
-from redis.commands.search.query import NumericFilter, Query
+from redis.commands.search.query import Query
 
 from ..clients import redis
 from ..utility.typing import Table
@@ -17,10 +18,11 @@ def save_celery_task(task_id: str, task_tuple: str) -> None:
     Saves a Celery task as a tuple tree generated from 'as_tuple' in the database under the given task_id.
     """
     redis.get_client().json().set(
-        f"task:{task_id}", 
+        f"task:{task_id.replace('-', '')}",  # See: https://forum.redis.com/t/query-with-dash-is-treated-as-negation/119/12
         Path.root_path(),
         {
             "task": {
+                "id": task_id.replace('-', ''),
                 "task_tuple": str(task_tuple)
             }
         }
@@ -31,12 +33,12 @@ def get_celery_task(task_id: str) -> Optional[tuple]:
     """
     Gets a Celery task tuple tree if the task exists, otherwise returns None.
     """
-    query = Query(f"@task_id:{task_id}")
-    results = redis.get_client().ft(index_name="task").search(query)
+    query = Query(f"@id:{task_id.replace('-', '')}")
+    res = redis.get_client().ft(index_name="task").search(query)
     first = None
-    if results.docs:
-        first = json.loads(results.docs[0].json)
-    return literal_eval(first["task_tuple"]) if first else None
+    if res.docs:
+        first = json.loads(res.docs[0].json)
+    return literal_eval(first["task"]["task_tuple"]) if first else None
 
 
 def add_table(table_name: str, table_path: str, table_bucket: str, column_count: int, nodes: Dict[str, str]) -> None:
@@ -44,7 +46,7 @@ def add_table(table_name: str, table_path: str, table_bucket: str, column_count:
     Adds a table with some useful metadata to the database.
     """
     redis.get_client().json().set(
-        f"table:{table_path}", 
+        f"table:{table_path}",
         Path.root_path(),
         {
             "table": {
@@ -67,8 +69,8 @@ def list_tables(bucket=None) -> List[Table]:
     query = Query("*")
     if bucket:
         query = Query(f"@bucket:{bucket}")
-    results = redis.get_client().ft(index_name="table").search(query)
-    return [json.loads(doc.json) for doc in result.docs]
+    res = redis.get_client().ft(index_name="table").search(query)
+    return [json.loads(doc.json)['table'] for doc in res.docs]
 
 
 def get_table(table_path: str) -> Optional[Table]:
@@ -76,18 +78,18 @@ def get_table(table_path: str) -> Optional[Table]:
     Gets table metadata given the table path, or None if nothing was found.
     """
     query = Query(f"@path:{table_path}")
-    results = redis.get_client().ft(index_name="table").search(query)
+    res = redis.get_client().ft(index_name="table").search(query)
     first = None
-    if results.docs:
-        first = json.loads(results.docs[0].json)
-    return first
+    if res.docs:
+        first = json.loads(res.docs[0].json)
+    return first['table'] if first else None
 
 
 def table_exists(table_path: str) -> bool:
     """
     Checks whether there is any table metadata for the given table path.
     """
-    return get_table(table_path) != None
+    return get_table(table_path) is not None
 
 
 def get_node_ids(table_path: str) -> Dict[str, str]:
@@ -96,8 +98,8 @@ def get_node_ids(table_path: str) -> Dict[str, str]:
     """
     res = get_table(table_path)
     if not res:
-        logging.warn(f"Could not find metadata for table at {table_path}!")
-    return res["nodes"] if res else []
+        logging.warn(f"Could not find metadata for table at '{table_path}'!")
+    return res["nodes"] if res else {}
 
 
 def purge() -> None:

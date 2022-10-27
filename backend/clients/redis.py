@@ -2,14 +2,11 @@ import os
 import logging
 
 from redis import StrictRedis
-from redis.commands.search.field import TextField, NumericField, TagField
+from redis.commands.search.field import TextField
 from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.exceptions import ResponseError
 
-from ..utility.parsing import parse_ip
-
 redis_client: StrictRedis = None
-
 
 
 def get_client() -> StrictRedis:
@@ -22,12 +19,11 @@ def get_client() -> StrictRedis:
 
 def initialize():
     table_schema = (
-        TagField("$.table.path", as_name="path"),
-        TagField("$.table.bucket", as_name="bucket")
-    
+        TextField("$.table.path", as_name="path"),
+        TextField("$.table.bucket", as_name="bucket")
     )
     task_schema = (
-        TagField("$.task.id", as_name="id"),
+        TextField("$.task.id", as_name="id")
     )
     _setup_index("table", table_schema)
     _setup_index("task", task_schema)
@@ -40,7 +36,7 @@ def drop_index(name):
 def _setup_index(name, schema):
     try:
         get_client().ft(index_name=name).create_index(
-            schema, 
+            schema,
             definition=IndexDefinition(prefix=[f"{name}:"], index_type=IndexType.JSON)
         )
     except ResponseError:

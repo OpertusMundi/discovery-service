@@ -18,7 +18,7 @@ def add_table(bucket: str, table_path: str):
     table_name = table_path.split('/')[-1]
     df = search.io_tools.get_df(bucket, table_path)
     # Split the dataframe into a new dataframe for each column
-    logging.info(f"- Adding whole table metadata to neo4j")
+    logging.info(f"- Adding whole table metadata to neo4j for {table_path}")
     nodes = {}
     for col in df.columns:
         node = discovery.crud.create_node(table_name, table_path, col)

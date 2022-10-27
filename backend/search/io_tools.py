@@ -1,6 +1,7 @@
 import dask.dataframe as dd
 import pandas as pd
 import os
+import logging
 
 from pathlib import Path
 
@@ -22,10 +23,10 @@ def table_exists(bucket: str, table_path: str) -> bool:
 
 def get_tables(bucket: str) -> List[str]:
     """
-    Gets all objects in the given bucket as a list of paths.
+    Gets all objects in the given bucket as a list of paths (relative to the bucket).
     """
-    path = root_path() / bucket
-    return [p.name for p in path.glob("**/*.csv")]
+    bucket_root = root_path() / bucket
+    return [str(p.relative_to(bucket_root)).strip("/") for p in bucket_root.glob("**/*.csv")]
 
 
 def bucket_exists(bucket: str) -> bool:

@@ -49,7 +49,7 @@ class IngestData(Resource):
 
         header = []
         for table_path in paths:
-            if not db.get_table(table_path):
+            if not db.table_exists(table_path):
                 header.append(add_table.s(bucket, table_path))
             else:
                 logging.info(f"Table {table_path} was already processed!")
@@ -234,7 +234,7 @@ class AddTable(Resource):
     'bucket': {'description': 'Path to the S3 bucket where the table resides', 'in': 'query', 'type': 'string',
                'required': 'true', 'default': 'data'},
     'table_path': {'description': 'Path to the table', 'in': 'query', 'type': 'string', 'required': 'true'},
-    'rows': {'description': 'Number of rows to get from the top', 'in': 'query', 'type': 'int', 'required': 'true'}
+    'rows': {'description': 'Number of rows to get from the top', 'in': 'query', 'type': 'string', 'required': 'true'}
 })
 class GetTableCSV(Resource):
     @api.response(400, 'Missing table path, rows or bucket query parameters')
