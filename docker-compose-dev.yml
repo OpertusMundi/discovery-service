@@ -100,10 +100,11 @@ services:
      - 443
    ports:
      - "8080:8080"
+     - "8081:8081"
    volumes:
      - ./metanome/src:/src
      - ./metanome/logs:/logs
-     - data:/data
+     - data:/metanome/backend/WEB-INF/classes/inputData
    command:  sh -c "./start"
    restart: always
    tty: true

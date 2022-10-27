@@ -1,0 +1,16 @@
+{
+    "type": "fileInput",
+    "id": 1,
+    "name": "path_to_file/folder",
+    "fileName": "path_to_file/folder",
+    "separator": ",",
+    "quoteChar": "'",
+    "escapeChar": "\\",
+    "skipLines": "0",
+    "strictQuotes": false,
+    "ignoreLeadingWhiteSpace": true,
+    "hasHeader": true,
+    "skipDifferingLines": false,
+    "comment": "",
+    "nullValue": ""
+}

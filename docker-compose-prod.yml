@@ -7,15 +7,15 @@ services:
      env_file:
         - .env
         - .config
-     ports:
-       - "5672:5672"
-       - "15672:15672"
+     expose:
+       - 5672
+       - 15672
 
   neo4j:
     image: neo4j
-    ports:
-      - "7474:7474"
-      - "7687:7687"
+    expose:
+      - 7474
+      - 7687
     volumes:
       - neo4jdata:/data
     env_file:
@@ -64,8 +64,8 @@ services:
     env_file:
       - .env
       - .config
-    ports:
-      - "6379:6379"
+    expose:
+      - 6379
     volumes:
       - redisdata:/data
 
@@ -74,8 +74,8 @@ services:
    build: ./metanome
    expose:
      - 443
-   ports:
-     - "8080:8080"
+   volumes:
+     - data:/data
    command:  sh -c "./start"
    restart: always
    tty: true
