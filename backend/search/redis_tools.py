@@ -36,7 +36,7 @@ def get_celery_task(task_id: str) -> Optional[tuple]:
     first = None
     if results.docs:
         first = json.loads(results.docs[0].json)
-    return literal_eval(first["task_tuple"]) if res else None
+    return literal_eval(first["task_tuple"]) if first else None
 
 
 def add_table(table_name: str, table_path: str, table_bucket: str, column_count: int, nodes: Dict[str, str]) -> None:

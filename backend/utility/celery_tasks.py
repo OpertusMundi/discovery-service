@@ -29,7 +29,7 @@ def add_table(bucket: str, table_path: str):
 
     discovery.crud.create_subsumption_relation(table_path)
 
-    logging.info(f"- Adding ingestion record to mongodb")
+    logging.info(f"- Adding ingestion record to db")
 
     db.add_table(table_name, table_path, bucket, len(df.columns), nodes)
 
@@ -49,7 +49,7 @@ def profile_valentine_star(bucket: str, table_path: str):
     """
     Profiles all tables in the given bucket against the given table.
     """
-    all_tables = mongo_tools.list_tables(bucket=bucket)
+    all_tables = db.list_tables(bucket=bucket)
     for other in all_tables:
         if table_path != other["path"]:
             profile_valentine_pair(bucket, table_path, other["path"])

@@ -68,7 +68,7 @@ def table_exists(table_path: str) -> bool:
     """
     Checks whether there is any table metadata for the given table path.
     """
-    return get_table(table_path) != None
+    return get_table(table_path) is not None
 
 
 def get_node_ids(table_path: str) -> Dict[str, str]:
