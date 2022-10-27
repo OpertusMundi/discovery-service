@@ -6,7 +6,6 @@ services:
      restart: always
      env_file:
        - .env
-       - .config
      ports:
        - "5672:5672"
        - "15672:15672"
@@ -20,8 +19,8 @@ services:
       - neo4jdata:/data
     env_file:
       - .env
-      - .config
 
+  # API for public access
   api:
     build: ./backend
     ports:
@@ -43,7 +42,6 @@ services:
       FLASK_ENV: development
     env_file:
       - .env
-      - .config
 
   # Celery worker that does schema matching jobs
   celery-worker:
@@ -56,7 +54,6 @@ services:
       - PYTHONUNBUFFERED=1
     env_file:
       - .env
-      - .config
     # Polling is required because inotify does not work on subfolders of bind mounts
     command: watchmedo auto-restart --debug-force-polling -d /backend/utility/celery_tasks.py -d /backend/__init__.py -- celery -A backend.celery worker -l INFO --concurrency=1
     depends_on:
@@ -73,7 +70,6 @@ services:
       - FLOWER_PORT=5555
     env_file:
       - .env
-      - .config
     ports:
       - "5555:5555"
     depends_on:
@@ -86,7 +82,6 @@ services:
       - REDIS_ARGS=--maxmemory 512mb --requirepass redis
     env_file:
       - .env
-      - .config
     ports:
       - "6379:6379"
       - "8001:8001"    
@@ -113,7 +108,6 @@ services:
      WAIT_HOSTS: neo4j:7474, neo4j:7687
    env_file:
      - .env
-     - .config
 
 volumes:
   redisdata:

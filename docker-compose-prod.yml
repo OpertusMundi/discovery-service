@@ -6,7 +6,6 @@ services:
      restart: always
      env_file:
         - .env
-        - .config
      expose:
        - 5672
        - 15672
@@ -20,7 +19,6 @@ services:
       - neo4jdata:/data
     env_file:
       - .env
-      - .config
 
   api:
     build: ./backend
@@ -39,7 +37,6 @@ services:
       PYTHONUNBUFFERED: 1
     env_file:
       - .env
-      - .config
 
   # Celery worker that does schema matching jobs
   celery-worker:
@@ -51,7 +48,6 @@ services:
       - PYTHONUNBUFFERED=1
     env_file:
       - .env
-      - .config
     command: celery -A backend.celery worker -l INFO --concurrency=1
     depends_on:
       - rabbitmq
@@ -63,7 +59,6 @@ services:
       - REDIS_ARGS=--maxmemory 512mb --requirepass redis
     env_file:
       - .env
-      - .config
     expose:
       - 6379
     volumes:
@@ -84,7 +79,6 @@ services:
      WAIT_HOSTS: neo4j:7474, neo4j:7687
    env_file:
      - .env
-     - .config
 
 volumes:
   neo4jdata:
