@@ -22,6 +22,9 @@ RUN rm ./deployment-1.2-SNAPSHOT-package_with_tomcat.zip
 # Add algo
 RUN wget https://hpi.de/fileadmin/user_upload/fachgebiete/naumann/projekte/repeatability/DataProfiling/Metanome_Algorithms/BINDER-1.2-SNAPSHOT.jar -P /metanome/backend/WEB-INF/classes/algorithms
 
+# Delete existing data
+RUN rm -f -r /metanome/backend/WEB-INF/classes/inputData/*
+
 # Copy run script
 ADD ./start.sh ./start
 RUN chmod a+x ./start
