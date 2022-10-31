@@ -6,6 +6,11 @@ set -o allexport
 source .env
 set +o allexport
 
+# Take everything down that was still running
+docker-compose -f docker-compose-dev.yml down
+docker-compose -f docker-compose-prod.yml down
+
+
 compose_file="docker-compose-dev.yml"
 if [ "$DAISY_PRODUCTION" = true ]; then
     compose_file="docker-compose-prod.yml"
