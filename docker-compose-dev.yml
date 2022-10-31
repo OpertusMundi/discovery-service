@@ -32,7 +32,7 @@ services:
     volumes:
       - ./backend:/backend
       - ./backend/logs:/logs
-      - data:/data
+      - ./data:/data
 
     command:  sh -c "./wait && watchmedo auto-restart --debug-force-polling -d /backend/app.py -- ./start.sh"
     restart: always
@@ -50,7 +50,7 @@ services:
     build: ./backend
     volumes:
       - ./backend:/backend
-      - data:/data
+      - ./data:/data
     restart: always
     environment:
       PYTHONUNBUFFERED: 1
@@ -102,7 +102,7 @@ services:
    volumes:
      - ./metanome/src:/src
      - ./metanome/logs:/logs
-     - data:/metanome/backend/WEB-INF/classes/inputData
+     - ./data:/metanome/backend/WEB-INF/classes/inputData
    command:  sh -c "./start"
    restart: always
    tty: true
@@ -115,4 +115,3 @@ services:
 volumes:
   redisdata:
   neo4jdata:
-  data:
