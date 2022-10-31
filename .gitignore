@@ -131,8 +131,8 @@ dmypy.json
 .DS_Store
 
 # Own stuff
-backend/storage/*
-!backend/storage/.keep
+data/*
+!data/.keep
 backend/src/api/dask-worker-space
 backend/logs/
 metanome/logs/

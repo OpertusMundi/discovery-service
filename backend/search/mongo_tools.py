@@ -7,15 +7,7 @@ from pymongo.database import Database
 from typing_extensions import TypedDict
 
 from ..clients import mongodb
-
-
-class Table(TypedDict):
-    """
-    Intended for typing usecases.
-    """
-    name: str
-    column_count: int
-    nodes: Dict[str, str]
+from ..utility.typing import Table
 
 
 def get_db() -> Database:
@@ -76,7 +68,7 @@ def table_exists(table_path: str) -> bool:
     """
     Checks whether there is any table metadata for the given table path.
     """
-    return get_table(table_path) != None
+    return get_table(table_path) is not None
 
 
 def get_node_ids(table_path: str) -> Dict[str, str]:

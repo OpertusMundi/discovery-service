@@ -1,1 +1,1 @@
-from . import mongo_tools, io_tools
+from . import redis_tools, mongo_tools, io_tools

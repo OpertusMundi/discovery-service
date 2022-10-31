@@ -5,6 +5,7 @@ import object_methods as mn
 from pathlib import Path
 import requests
 import time
+import json
 
 logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
 
@@ -15,12 +16,9 @@ app.debug = True
 app.secret_key = os.urandom(24)
 
 
-MINIO_HOST = os.environ["MINIO_HOST"]
-MINIO_PORT = os.environ["MINIO_PORT"]
-MINIO_ACCESS_KEY = os.environ["MINIO_ACCESS_KEY"]
-MINIO_SECRET_KEY = os.environ["MINIO_SECRET_KEY"]
-MINIO_DEFAULT_BUCKET = os.environ["MINIO_DEFAULT_BUCKET"]
 METANOME_ADDRESS = os.environ["METANOME_ADDRESS"]
+METANOME_DATA_PATH = os.environ["METANOME_DATA_PATH"]
+
 
 
 @app.route('/')
@@ -30,25 +28,19 @@ def index():
 
 @app.route("/run_binder/<path:bucket>")
 def run_binder(bucket):
-    minio_connection = mn.create_minio_connection(
-        f"http://{MINIO_HOST}:{MINIO_PORT}",
-        MINIO_ACCESS_KEY,
-        MINIO_SECRET_KEY
-    )
-    res_minio_connection = requests.post(f"http://{METANOME_ADDRESS}/api/minio-connections/store", json=minio_connection).json()
-
     # Need to make sure to delete existing inputs
-    inputs = requests.get(f"http://{METANOME_ADDRESS}/api/minio-inputs").json()
+    inputs = requests.get(f"http://{METANOME_ADDRESS}/api/file-inputs").json()
     for inp in inputs:
-        requests.delete(f"http://{METANOME_ADDRESS}/api/minio-inputs/delete/{inp['id']}")
+        requests.delete(f"http://{METANOME_ADDRESS}/api/file-inputs/delete/{inp['id']}")
 
-    # This one makes a whole bunch of inputs, doesn't return anything useful, so performing a get is better
-    minio_input = mn.create_minio_input("", bucket, res_minio_connection)
-    requests.post(f"http://{METANOME_ADDRESS}/api/minio-inputs/bucket", json=minio_input)
-    inputs = requests.get(f"http://{METANOME_ADDRESS}/api/minio-inputs").json()
+    path = Path(METANOME_DATA_PATH) / bucket
+    requests.post(f"http://{METANOME_ADDRESS}/api/file-inputs/get-directory-files", json=mn.create_file_input(str(path)))  # This one makes a whole bunch of inputs, doesn't return anything useful, so performing a get is better
 
 
-    binder_execution = mn.create_binder_execution([mn.convert_minio_input_to_execution(inp) for inp in inputs])
+    inputs = requests.get(f"http://{METANOME_ADDRESS}/api/file-inputs").json()
+
+
+    binder_execution = mn.create_binder_execution([mn.convert_file_input_to_execution(inp) for inp in inputs])
     requests.post(f"http://{METANOME_ADDRESS}/api/algorithm-execution", json=binder_execution)
 
     # Watch the results dir
@@ -68,6 +60,5 @@ def run_binder(bucket):
         path.unlink()
 
     return results
-
 
 app.run(host='0.0.0.0', port=443)

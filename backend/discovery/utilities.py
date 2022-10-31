@@ -30,6 +30,8 @@ def process_relation(base_table: str, result: List[Dict[str, str]]) -> List[Dict
         if "coma" in relation:
             table["RELATED"] = {'coma': relation['coma']}
             explanation = f"{explanation} with a confidence threshold of {relation['coma']} (1.0 being the best score)"
+        else:
+            table["RELATED"] = {}
 
         table['explanation'] = explanation
         tables.append(table)

@@ -66,11 +66,12 @@ def get_joinable(table_name: str):
                 related_table.pop("table_name")  # We move this one level up
                 joinable_tables[related_table_name]["matches"].append(related_table)
                 joinable_tables[related_table_name]["table_name"] = related_table_name
+            logging.info(joinable_tables[related_table_name]["matches"])
             joinable_tables[related_table_name]["matches"] = list(
-                sorted(joinable_tables[related_table_name]["matches"], key=lambda x: -x["RELATED"]["coma"]))
+                sorted(joinable_tables[related_table_name]["matches"], key=lambda x: -x["RELATED"]["coma"] if "coma" in x["RELATED"] else 0))
 
     joinable_tables_sorted = sorted(list(joinable_tables.values()), key=lambda x: (
-    -len(x["matches"]), -np.mean([x["RELATED"]["coma"] for x in x["matches"]])))
+    -len(x["matches"]), -np.mean([x["RELATED"]["coma"] if "coma" in x["RELATED"] else 0 for x in x["matches"]])))
 
     return joinable_tables_sorted
 

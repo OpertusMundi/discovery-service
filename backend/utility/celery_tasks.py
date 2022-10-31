@@ -5,7 +5,8 @@ import os
 from backend import celery
 from .. import search, profiling, discovery
 from ..profiling.valentine import match, process_match
-from ..search import io_tools, mongo_tools
+from ..search import io_tools
+from ..search import redis_tools as db
 
 
 # return value to know if it succeed or not
@@ -17,7 +18,7 @@ def add_table(bucket: str, table_path: str):
     table_name = table_path.split('/')[-1]
     df = search.io_tools.get_df(bucket, table_path)
     # Split the dataframe into a new dataframe for each column
-    logging.info(f"- Adding whole table metadata to neo4j")
+    logging.info(f"- Adding whole table metadata to neo4j for {table_path}")
     nodes = {}
     for col in df.columns:
         node = discovery.crud.create_node(table_name, table_path, col)
@@ -28,9 +29,9 @@ def add_table(bucket: str, table_path: str):
 
     discovery.crud.create_subsumption_relation(table_path)
 
-    logging.info(f"- Adding ingestion record to mongodb")
+    logging.info(f"- Adding ingestion record to db")
 
-    search.mongo_tools.add_table(table_name, table_path, bucket, len(df.columns), nodes)
+    db.add_table(table_name, table_path, bucket, len(df.columns), nodes)
 
 
 @celery.task
@@ -48,7 +49,7 @@ def profile_valentine_star(bucket: str, table_path: str):
     """
     Profiles all tables in the given bucket against the given table.
     """
-    all_tables = mongo_tools.list_tables(bucket=bucket)
+    all_tables = db.list_tables(bucket=bucket)
     for other in all_tables:
         if table_path != other["path"]:
             profile_valentine_pair(bucket, table_path, other["path"])

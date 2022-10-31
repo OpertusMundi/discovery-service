@@ -21,6 +21,7 @@ RUN chmod +x ./wait
 RUN wget https://dl.min.io/client/mc/release/linux-amd64/archive/mc.RELEASE.2022-01-07T06-01-38Z -O /usr/local/bin/mc
 RUN chmod +x /usr/local/bin/mc
 
+
 # Install python deps
 COPY requirements.txt /
 RUN pip3 install -r /requirements.txt
@@ -39,3 +40,6 @@ RUN pip3 install -r /requirements.txt
 # Copy run script
 COPY start.sh /
 RUN chmod a+x start.sh
+
+# Copy everything
+COPY . ./backend

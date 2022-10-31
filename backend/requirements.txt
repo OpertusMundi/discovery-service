@@ -12,7 +12,7 @@ valentine==0.1.4
 celery==5.2.3
 # flower
 flower==1.0.0
-redis==4.1.2
+redis==4.3.4
 # sherlock
 gdown==4.3.0
 pyarrow==2.0.0
@@ -29,4 +29,4 @@ watchdog==2.1.9
 typing-extensions==4.3.0
 werkzeug==2.1.2
 importlib_metadata<5.0
-
+waitress==2.1.2

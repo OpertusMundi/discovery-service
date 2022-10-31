@@ -25,3 +25,6 @@ RUN wget https://hpi.de/fileadmin/user_upload/fachgebiete/naumann/projekte/repea
 # Copy run script
 ADD ./start.sh ./start
 RUN chmod a+x ./start
+
+# Copy everything
+COPY ./src /src
