@@ -29,7 +29,8 @@ celery = Celery(app.name, broker_url=f"amqp://{os.environ['RABBITMQ_DEFAULT_USER
                         'task': 'backend.utility.celery_tasks.ingest_all_new_tables',
                                 'schedule': float(os.environ["DATA_INGESTION_INTERVAL"])
                     },
-                }
+                },
+                task_cls='backend.utility.celery_tasks:LoggingTask'
                 )
 
 

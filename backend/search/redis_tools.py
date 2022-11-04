@@ -41,7 +41,7 @@ def get_celery_task(task_id: str) -> Optional[tuple]:
     return literal_eval(first["task"]["task_tuple"]) if first else None
 
 
-def add_table(table_name: str, table_path: str, table_bucket: str, column_count: int, nodes: Dict[str, str]) -> None:
+def add_table(table_name: str, table_path: str, column_count: int, nodes: Dict[str, str]) -> None:
     """
     Adds a table with some useful metadata to the database.
     """
@@ -51,7 +51,6 @@ def add_table(table_name: str, table_path: str, table_bucket: str, column_count:
         {
             "table": {
                 "path": table_path,
-                "bucket": table_bucket,
                 "name": table_name,
                 "column_count": column_count,
                 "nodes": nodes
@@ -60,15 +59,11 @@ def add_table(table_name: str, table_path: str, table_bucket: str, column_count:
     )
 
 
-def list_tables(bucket=None) -> List[Table]:
+def list_tables() -> List[Table]:
     """
-    Lists all tables in the given bucket that have metadata (meaning they were ingested).
-
-    If the bucket is 'None', all tables are returned.
+    Lists all tables that have metadata (meaning they were ingested).
     """
     query = Query("*")
-    if bucket:
-        query = Query(f"@bucket:{bucket}")
     res = redis.get_client().ft(index_name="table").search(query)
     return [json.loads(doc.json)['table'] for doc in res.docs]
 
