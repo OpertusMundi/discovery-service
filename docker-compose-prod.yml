@@ -54,6 +54,20 @@ services:
     depends_on:
       - rabbitmq
 
+  # Celery beat, used for  scheduling
+  celery-beat:
+    build: ./backend
+    volumes:
+      - data:/data
+    restart: always
+    environment:
+      PYTHONUNBUFFERED: 1
+    env_file:
+      - .env
+    command: celery -A backend.celery beat -l INFO
+    depends_on:
+      - rabbitmq
+
   # In-memory store with persistence used for storing daisy table metadata and celery task information/statuses
   redis:
     image: redis/redis-stack-server:latest

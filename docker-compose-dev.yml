@@ -61,6 +61,22 @@ services:
     depends_on:
       - rabbitmq
 
+  # Celery beat, used for  scheduling
+  celery-beat:
+    build: ./backend
+    volumes:
+      - ./backend:/backend
+      - ./data:/data
+    restart: always
+    environment:
+      PYTHONUNBUFFERED: 1
+    env_file:
+      - .env
+    # Polling is required because inotify does not work on subfolders of bind mounts
+    command: watchmedo auto-restart --debug-force-polling -d /backend/utility/celery_tasks.py -d /backend/__init__.py -- celery -A backend.celery beat -l INFO
+    depends_on:
+      - rabbitmq
+
   # Dashboard for Celery
   celery-flower:
     build: ./backend
