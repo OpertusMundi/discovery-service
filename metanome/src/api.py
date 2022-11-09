@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, Response
 import os
 import logging
 import object_methods as mn
@@ -17,6 +17,7 @@ app.secret_key = os.urandom(24)
 
 METANOME_ADDRESS = os.environ["METANOME_ADDRESS"]
 METANOME_DATA_PATH = os.environ["METANOME_DATA_PATH"]
+METANOME_TIMEOUT = int(os.environ["METANOME_TIMEOUT"])
 
 
 @app.route('/')
@@ -52,22 +53,29 @@ def run_binder():
         f"http://{METANOME_ADDRESS}/api/algorithm-execution", json=binder_execution)
 
     # Watch the results dir
+    counter = 0
     result_path = Path("/metanome/results")
     path = None
-    while path is None:
+    logging.info("Waiting for Binder results...")
+    while path is None and counter <= METANOME_TIMEOUT:
         time.sleep(1)
+        counter += 1
         paths = list(result_path.iterdir())
         if len(paths) > 0:
             path = paths[0]
 
     results = ""
-    with open(path, 'r') as file:
-        results = file.read()
+    if counter <= METANOME_TIMEOUT:
+        with open(path, 'r') as file:
+            results = file.read()
 
-    for path in result_path.iterdir():
-        path.unlink()
+        for path in result_path.iterdir():
+            path.unlink()
 
-    return results
+        return results
+    else:
+        logging.warn("Timeout exceeded for Binder results file")
+        return Response("Metanome result file timeout", status=500)
 
 
 app.run(host='0.0.0.0', port=443)
