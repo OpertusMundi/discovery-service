@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import List
 
 
-def root_path():
+def root_path() -> Path:
     return Path(os.environ["DATA_ROOT_PATH"])
 
 
@@ -25,7 +25,19 @@ def get_tables() -> List[str]:
     Gets all tables as a list of paths.
     """
     root = root_path()
-    return [str(p.relative_to(root)).strip("/") for p in root.glob("**/*.csv")]
+    tables = []
+    for p in root.iterdir():
+        tables += [str(p.relative_to(root)).strip("/")
+                   for p in (p / "resources").glob("**/*.csv")]
+    return tables
+
+
+def get_table_path_from_asset_id(asset_id: str) -> str:
+    root = root_path()
+    asset_path = root / asset_id
+    for p in (asset_path / "resources").glob("**/*.csv"):
+        return str(p.relative_to(root)).strip("/")
+    return ""
 
 
 def get_df(table_path: str, rows=None) -> pd.DataFrame:

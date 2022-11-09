@@ -25,6 +25,7 @@ TaskIdModel = api.model('TaskId', {'task_id': fields.String, 'type': fields.Stri
 
 
 @api.route('/ingest-data')
+@api.route('/ingest-data')
 @api.doc(description="Ingest all the data present in the data volume.")
 class IngestData(Resource):
     @api.response(202, 'Success, processing in backend', TaskIdModel)
@@ -133,26 +134,27 @@ class FilterConnections(Resource):
 
 @api.route('/profile-valentine')
 @api.doc(
-    description="Runs Valentine profiling between the given table and all other ingested tables, used for finding columns that are related.")
+    description="Runs Valentine profiling between the table in the given asset and all other ingested tables, used for finding columns that are related.")
 @api.doc(params={
-    'table_path': {'description': 'Path to the table', 'in': 'query', 'type': 'string', 'required': 'true'}
+    'asset_id': {'description': 'The id of the asset to get the table from', 'in': 'query', 'type': 'string', 'required': 'true'}
 })
 class ProfileValentine(Resource):
     @api.response(202, 'Success', TaskIdModel)
-    @api.response(400, 'Missing table path query parameter')
-    @api.response(403, 'Table has not been ingested yet')
-    @api.response(404, 'Table does not exist')
+    @api.response(400, 'Missing asset id query parameter')
+    @api.response(403, 'Table in asset has not been ingested yet')
+    @api.response(404, 'Table or asset does not exist')
     def get(self):
-        table_path = request.args.get('table_path')
+        asset_id = request.args.get('asset_id')
 
-        if table_path:
-            return Response("Missing table path query parameter", status=400)
+        if asset_path:
+            return Response("Missing asset id query parameter", status=400)
 
-        if not search.io_tools.table_exists(table_path):
-            return Response("Table does not exist", status=404)
+        table_path = search.io_tools.get_table_path_from_asset_id(asset_id)
+        if not table_path:
+            return Response("Asset or table within does not exist", status=404)
 
         if not db.table_exists(table_path):
-            return Response("Table has not been ingested yet", status=403)
+            return Response("Table in asset has not been ingested yet", status=403)
 
         task = profile_valentine_star.delay(table_path)
         db.save_celery_task(task.id, task.as_tuple())
@@ -162,25 +164,26 @@ class ProfileValentine(Resource):
 
 
 @api.route('/add-table')
-@api.doc(description="Initiates ingestion and profiling for the table at the given path.")
+@api.doc(description="Initiates ingestion and profiling for the table in the given asset.")
 @api.doc(params={
-    'table_path': {'description': 'Path to the table', 'in': 'query', 'type': 'string', 'required': 'true'}
+    'asset_id': {'description': 'The id of the asset to get the table from', 'in': 'query', 'type': 'string', 'required': 'true'}
 })
 class AddTable(Resource):
-    @api.response(400, 'Missing table path parameter')
-    @api.response(204, 'Table was already processed')
-    @api.response(404, 'Table does not exist')
+    @api.response(400, 'Missing asset id query parameter')
+    @api.response(204, 'Table in asset was already processed')
+    @api.response(404, 'Table or asset does not exist')
     def get(self):
-        table_path = request.args.get('table_path')
+        asset_id = request.args.get('asset_id')
 
+        if not asset_id:
+            return Response("Missing asset id query parameter", status=400)
+
+        table_path = search.io_tools.get_table_path_from_asset_id(asset_id)
         if not table_path:
-            return Response("Missing table path query parameter", status=400)
-
-        if not search.io_tools.table_exists(table_path):
-            return Response("Table does not exist", status=404)
+            return Response("Table or asset does not exist", status=404)
 
         if db.get_table(table_path):
-            return Response("Table was already processed", status=204)
+            return Response("Table in asset was already processed", status=204)
 
         task = (add_table.si(table_path) | profile_valentine_star.si(table_path)).apply_async()
         db.save_celery_task(task.id, task.as_tuple())
@@ -192,20 +195,21 @@ class AddTable(Resource):
 @api.route('/get-table-csv')
 @api.doc(description="Gets a part of the table at the given path as CSV.")
 @api.doc(params={
-    'table_path': {'description': 'Path to the table', 'in': 'query', 'type': 'string', 'required': 'true'},
+    'asset_id': {'description': 'The id of the asset to get the table from', 'in': 'query', 'type': 'string', 'required': 'true'},
     'rows': {'description': 'Number of rows to get from the top', 'in': 'query', 'type': 'string', 'required': 'true'}
 })
 class GetTableCSV(Resource):
-    @api.response(400, 'Missing table path or rows query parameters')
-    @api.response(404, 'Table does not exist')
+    @api.response(400, 'Missing asset id or rows query parameters')
+    @api.response(404, 'Table in asset does not exist')
     def get(self):
-        table_path = request.args.get('table_path')
+        asset_id = request.args.get('asset_id')
         rows = request.args.get('rows', type=int)
-        if not table_path or not rows:
-            return Response('Missing table path or rows query parameters', status=400)
+        if not asset_id or not rows:
+            return Response('Missing asset id or rows query parameters', status=400)
 
-        if not search.io_tools.table_exists(table_path):
-            return Response("Table does not exist", status=404)
+        table_path = search.io_tools.get_table_path_from_asset_id(asset_id)
+        if not table_path:
+            return Response("Table in asset does not exist", status=404)
 
         return search.io_tools.get_ddf(table_path).head(rows).to_csv()
 
@@ -219,32 +223,33 @@ RelatedTableModel = api.model("RelatedTable", {
 @api.route('/get-related')
 @api.doc(description="Get all the assets on the path connecting the source and the target tables.")
 @api.doc(params={
-    'source_table_path': {'description': 'Path to the source table', 'in': 'query', 'type': 'string',
-                          'required': 'true'},
-    'target_table_path': {'description': 'Path to the target table', 'in': 'query', 'type': 'string',
-                          'required': 'true'}
+    'source_asset_id': {'description': 'The id of the asset to get the table from as source', 'in': 'query', 'type': 'string', 'required': 'true'},
+    'target_asset_id': {'description': 'The id of the asset to get the table from as target', 'in': 'query', 'type': 'string', 'required': 'true'},
+
 })
 class GetRelatedNodes(Resource):
     @api.response(200, 'Success',
                   api.model("RelatedTables", {"RelatedTables": fields.List(fields.Nested(RelatedTableModel))}))
-    @api.response(400, 'Missing table paths query parameters')
+    @api.response(400, 'Missing asset ids query parameters')
     @api.response(403, 'Source and target are the same')
-    @api.response(404, 'Table does not exist')
+    @api.response(404, 'Table in asset does not exist')
     def get(self):
-        from_table = request.args.get("source_table_path")
-        to_table = request.args.get("target_table_path")
+        source_asset_id = request.args.get("source_asset_id")
+        target_asset_id = request.args.get("target_asset_id")
 
-        if not from_table or not to_table:
-            return Response("Please provide both a source table path and a target table path as query parameters",
+        if not source_asset_id or not target_asset_id:
+            return Response("Please provide both a source asset id and a target asset id as query parameters",
                             status=400)
 
-        if from_table == to_table:
-            return Response("Source and target table paths should be different", status=403)
+        if source_asset_id == target_asset_id:
+            return Response("Source and target asset ids should be different", status=403)
 
+        from_table = search.io_tools.get_table_path_from_asset_id(asset_id)
         node = discovery.queries.get_node_by_prop(source_name=from_table)
         if len(node) == 0:
             return Response("Table does not exist", status=404)
 
+        to_table = search.io_tools.get_table_path_from_asset_id(asset_id)
         node = discovery.queries.get_node_by_prop(source_name=to_table)
         if len(node) == 0:
             return Response("Table does not exist", status=404)
@@ -267,24 +272,25 @@ JoinableTableModel = api.model("JoinableTable", {
 
 
 @api.route('/get-joinable')
-@api.doc(description="Gets all assets that are joinable with the given source table.")
+@api.doc(description="Gets all assets that are joinable with the given source asset.")
 @api.doc(params={
-    'table_path': {'description': 'Path to the table', 'in': 'query', 'type': 'string', 'required': 'true'}
+    'asset_id': {'description': 'The id of the asset to get the table from', 'in': 'query', 'type': 'string', 'required': 'true'}
 })
 class GetJoinable(Resource):
     @api.response(200, 'Success', api.model("JoinableTables", {
         "JoinableTables": fields.List(fields.Nested(JoinableTableModel))}))  # TODO: specify return model
-    @api.response(400, 'Missing table paths query parameters')
-    @api.response(404, 'Table does not exist')
+    @api.response(400, 'Missing asset id query parameter')
+    @api.response(404, 'Table or table does not exist')
     def get(self):
         args = request.args
-        table_path = args.get("table_path")
-        if table_path is None:
-            return Response("Please provide a table path as query parameter", status=400)
+        asset_id = args.get("asset_id")
+        if asset_id is None:
+            return Response("Please provide an asset id as query parameter", status=400)
 
+        table_path = search.io_tools.get_table_path_from_asset_id(asset_id)
         node = discovery.queries.get_node_by_prop(source_name=table_path)
         if len(node) == 0:
-            return Response("Table does not exist", status=404)
+            return Response("Table or asset does not exist", status=404)
 
         return Response(json.dumps({"JoinableTables": discovery.queries.get_joinable(table_path)}),
                         mimetype='application/json', status=200)
