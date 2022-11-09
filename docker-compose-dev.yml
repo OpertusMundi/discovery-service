@@ -115,6 +115,7 @@ services:
    ports:
      - "8080:8080"
      - "8081:8081"
+     - "444:443"
    volumes:
      - ./metanome/src:/src
      - ./metanome/logs:/logs
