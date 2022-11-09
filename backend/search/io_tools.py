@@ -1,7 +1,6 @@
 import dask.dataframe as dd
 import pandas as pd
 import os
-import logging
 
 from pathlib import Path
 
@@ -9,41 +8,45 @@ from pathlib import Path
 from typing import List
 
 
-def root_path():
+def root_path() -> Path:
     return Path(os.environ["DATA_ROOT_PATH"])
 
 
-def table_exists(bucket: str, table_path: str) -> bool:
+def table_exists(table_path: str) -> bool:
     """
-    Checks whether the table exists as object in the given bucket at the given path.
+    Checks whether the table exists at the given path.
     """
-    path = root_path() / bucket / table_path
+    path = root_path() / table_path
     return path.exists()
 
 
-def get_tables(bucket: str) -> List[str]:
+def get_tables() -> List[str]:
     """
-    Gets all objects in the given bucket as a list of paths (relative to the bucket).
+    Gets all tables as a list of paths.
     """
-    bucket_root = root_path() / bucket
-    return [str(p.relative_to(bucket_root)).strip("/") for p in bucket_root.glob("**/*.csv")]
+    root = root_path()
+    tables = []
+    for p in root.iterdir():
+        tables += [str(p.relative_to(root)).strip("/")
+                   for p in (p / "resources").glob("**/*.csv")]
+    return tables
 
 
-def bucket_exists(bucket: str) -> bool:
-    """
-    Checks whether the given bucket exists.
-    """
-    path = root_path() / bucket
-    return path.exists()
+def get_table_path_from_asset_id(asset_id: str) -> str:
+    root = root_path()
+    asset_path = root / asset_id
+    for p in (asset_path / "resources").glob("**/*.csv"):
+        return str(p.relative_to(root)).strip("/")
+    return ""
 
 
-def get_df(bucket: str, table_path: str, rows=None) -> pd.DataFrame:
+def get_df(table_path: str, rows=None) -> pd.DataFrame:
     """
-    Gets a pandas dataframe from the given bucket/table_path combination.
+    Gets a pandas dataframe from the given table_path.
 
     The amount of rows can be limited with the 'rows' keyword.
     """
-    path = root_path() / bucket / table_path
+    path = root_path() / table_path
 
     df = pd.read_csv(
         path,
@@ -58,11 +61,11 @@ def get_df(bucket: str, table_path: str, rows=None) -> pd.DataFrame:
     return df
 
 
-def get_ddf(bucket: str, table_path: str) -> dd.DataFrame:
+def get_ddf(table_path: str) -> dd.DataFrame:
     """
-    Gets a dask dataframe from the given bucket/table_path combination.
+    Gets a dask dataframe from the given table_path.
     """
-    path = root_path() / bucket / table_path
+    path = root_path() / table_path
 
     ddf = dd.read_csv(
         path,
