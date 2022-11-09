@@ -27,17 +27,24 @@ def index():
 @app.route("/run_binder")
 def run_binder():
     # Need to make sure to delete existing inputs
+    logging.info("Cleaning existing inputs")
     inputs = requests.get(f"http://{METANOME_ADDRESS}/api/file-inputs").json()
     for inp in inputs:
         requests.delete(
             f"http://{METANOME_ADDRESS}/api/file-inputs/delete/{inp['id']}")
 
-    path = Path(METANOME_DATA_PATH)
-    # This one makes a whole bunch of inputs, doesn't return anything useful, so performing a get is better
-    requests.post(f"http://{METANOME_ADDRESS}/api/file-inputs/get-directory-files",
-                  json=mn.create_file_input(str(path)))
+    root = Path(METANOME_DATA_PATH)
+    for p in root.iterdir():
+        if p.is_dir():
+            resource_path = p / 'resources'
+            logging.info(f"Adding {resource_path} to Metanome's DB")
+            # This one makes a whole bunch of inputs, doesn't return anything useful, so performing a get is better
+            requests.post(f"http://{METANOME_ADDRESS}/api/file-inputs/get-directory-files", json=mn.create_file_input(str(resource_path)))
 
     inputs = requests.get(f"http://{METANOME_ADDRESS}/api/file-inputs").json()
+    logging.info("Available input files:")
+    for inp in inputs:
+        logging.info("- inp")
 
     binder_execution = mn.create_binder_execution(
         [mn.convert_file_input_to_execution(inp) for inp in inputs])
