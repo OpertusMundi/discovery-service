@@ -22,7 +22,7 @@ class LoggingTask(Task):
         kwargs = {}
         if logger.isEnabledFor(logging.DEBUG):
             kwargs['exc_info'] = exc
-        logger.error('Task % failed to execute', task_id, **kwargs)
+        logger.error('Task %s failed to execute', task_id, **kwargs)
 
 
 @celery.task

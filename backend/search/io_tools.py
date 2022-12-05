@@ -52,10 +52,11 @@ def get_df(table_path: str, rows=None) -> pd.DataFrame:
         path,
         header=0,
         engine="python",
-        encoding="utf8",
-        quotechar='"',
-        escapechar='\\',
-        nrows=rows
+        # encoding="utf8",
+        # quotechar='"',
+        # escapechar='\\',
+        nrows=rows,
+        sep=None,
     )
 
     return df

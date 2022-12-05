@@ -93,7 +93,7 @@ def get_node_ids(table_path: str) -> Dict[str, str]:
     """
     res = get_table(table_path)
     if not res:
-        logging.warn(f"Could not find metadata for table at '{table_path}'!")
+        logging.warning(f"Could not find metadata for table at '{table_path}'!")
     return res["nodes"] if res else {}
 
 
