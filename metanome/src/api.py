@@ -45,7 +45,7 @@ def run_binder():
     inputs = requests.get(f"http://{METANOME_ADDRESS}/api/file-inputs").json()
     logging.info("Available input files:")
     for inp in inputs:
-        logging.info("- inp")
+        logging.info(inp)
 
     binder_execution = mn.create_binder_execution(
         [mn.convert_file_input_to_execution(inp) for inp in inputs])
@@ -74,7 +74,7 @@ def run_binder():
 
         return results
     else:
-        logging.warn("Timeout exceeded for Binder results file")
+        logging.warning("Timeout exceeded for Binder results file")
         return Response("Metanome result file timeout", status=500)
 
 
