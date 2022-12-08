@@ -6,22 +6,23 @@ from backend.utility.display import log_format
 logging.basicConfig(format=log_format, level=logging.INFO)
 
 
-def process_relation(base_table: str, result: List[Dict[str, str]]) -> List[Dict[str, Union[Dict[str, str], str]]]:
+def process_relation(base_table_path: str, base_table_name: str, result: List[Dict[str, str]]) -> List[Dict[str, Union[Dict[str, str], str]]]:
     tables = []
     assets = []
     for relation in result:
         table = {}
         # Get connected node to the sibling. A relation is only between 2 nodes, so filter outputs one result
         related_node = list(filter(lambda x: x.get('id') is not None, relation.nodes))[0]
-        table['table_name'] = related_node.get('source_name')
-        if table['table_name'] in assets:
-            logging.info(f"IN ASSETS: {table['table_name']}")
+        table['table_path'] = related_node.get('source_path')
+        table['table_name'] = related_node.get('source_name')  # Needed for display
+        if table['table_path'] in assets:
+            logging.info(f"IN ASSETS: {table['table_path']}")
             continue
 
-        assets.append(table['table_name'])
-        logging.info(f"TABLE NAME: {table['table_name']}")
+        assets.append(table['table_path'])
+        logging.info(f"TABLE PATH: {table['table_path']}")
 
-        explanation = f"Table {base_table} is joinable with table {related_node.get('source_name')}"
+        explanation = f"Table {base_table_path} is joinable with table {related_node.get('source_name')}"
 
         if "to_id" in relation:
             table["PK"] = {'from_id': relation['from_id'], 'to_id': relation['to_id']}

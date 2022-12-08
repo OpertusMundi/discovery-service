@@ -44,9 +44,9 @@ def get_siblings(node_id):
     return nodes
 
 
-def get_nodes_by_table_name(source_name):
+def get_nodes_by_table_path(source_path):
     with neo.get_client().session() as session:
-        nodes = session.write_transaction(_get_nodes_by_table_name, source_name)
+        nodes = session.write_transaction(_get_nodes_by_table_path, source_path)
     return nodes
 
 
@@ -80,10 +80,10 @@ def delete_all():
     return node
 
 
-def _get_nodes_by_table_name(tx, source_name):
+def _get_nodes_by_table_path(tx, source_path):
     tx_result = tx.run("MATCH (n) "
-                       "WHERE n.source_name = $source_name "
-                       "RETURN n as result", source_name=source_name)
+                       "WHERE n.source_path = $source_path "
+                       "RETURN n as result", source_path=source_path)
 
     result = []
     for record in tx_result:
