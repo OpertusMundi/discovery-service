@@ -264,7 +264,7 @@ class GetRelatedNodes(Resource):
             if len(node) > 0:
                 related_tables += get_related_between_two_tables(from_table, to_table)
             else:
-                logging.warning(f"Table at path '{to_table_path}' does not exist")
+                logging.warning(f"Given asset '{asset_id}' does not exist")
         return Response(json.dumps({"RelatedTables": related_tables}), mimetype='application/json', status=200)
 
 
