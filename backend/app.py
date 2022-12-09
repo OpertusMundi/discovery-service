@@ -224,38 +224,48 @@ RelatedTableModel = api.model("RelatedTable", {
 @api.doc(description="Get all the assets on the path connecting the source and the target tables.")
 @api.doc(params={
     'source_asset_id': {'description': 'The id of the asset to get the table from as source', 'in': 'query', 'type': 'string', 'required': 'true'},
-    'target_asset_id': {'description': 'The id of the asset to get the table from as target', 'in': 'query', 'type': 'string', 'required': 'true'},
-
+    'target_asset_ids': {'description': 'The id of the asset to get the table from as target', 'in': 'query', 'type': 'array', 'items': {'type': 'string'}, 'required': 'true'},
 })
 class GetRelatedNodes(Resource):
     @api.response(200, 'Success',
                   api.model("RelatedTables", {"RelatedTables": fields.List(fields.Nested(RelatedTableModel))}))
     @api.response(400, 'Missing asset ids query parameters')
-    @api.response(403, 'Source and target are the same')
+    @api.response(403, 'Source asset id is among target asset ids')
     @api.response(404, 'Table in asset does not exist')
     def get(self):
         source_asset_id = request.args.get("source_asset_id")
-        target_asset_id = request.args.get("target_asset_id")
 
-        if not source_asset_id or not target_asset_id:
+        # Normally we can use Flask's 'getlist', but Flask RestX does not correctly send the query params:
+        # - What it should do is repeat the query param multiple times with different values
+        # - Instead, it puts it as one query param and separates the values by commas...
+        target_asset_ids_string = request.args.get("target_asset_ids")
+
+        if not source_asset_id or not target_asset_ids_string:
             return Response("Please provide both a source asset id and a target asset id as query parameters",
                             status=400)
 
-        if source_asset_id == target_asset_id:
-            return Response("Source and target asset ids should be different", status=403)
+        target_asset_ids = target_asset_ids_string.split(',')
 
-        from_table = search.io_tools.get_table_path_from_asset_id(asset_id)
-        node = discovery.queries.get_node_by_prop(source_name=from_table)
+        if source_asset_id in target_asset_ids:
+            return Response("Source asset id should not be in target asset ids", status=403)
+
+        from_table_path = search.io_tools.get_table_path_from_asset_id(source_asset_id)
+        from_table = search.redis_tools.get_table(from_table_path)
+        node = discovery.queries.get_node_by_prop(source_path=from_table_path)
         if len(node) == 0:
             return Response("Table does not exist", status=404)
 
-        to_table = search.io_tools.get_table_path_from_asset_id(asset_id)
-        node = discovery.queries.get_node_by_prop(source_name=to_table)
-        if len(node) == 0:
-            return Response("Table does not exist", status=404)
-
-        paths = get_related_between_two_tables(from_table, to_table)
-        return Response(json.dumps({"RelatedTables": paths}), mimetype='application/json', status=200)
+        related_tables = []
+        for asset_id in target_asset_ids:
+            logging.info(f"Processing {asset_id}")
+            to_table_path = search.io_tools.get_table_path_from_asset_id(asset_id)
+            to_table = search.redis_tools.get_table(to_table_path)
+            node = discovery.queries.get_node_by_prop(source_path=to_table_path)
+            if len(node) > 0:
+                related_tables += get_related_between_two_tables(from_table, to_table)
+            else:
+                logging.warning(f"Given asset '{asset_id}' does not exist")
+        return Response(json.dumps({"RelatedTables": related_tables}), mimetype='application/json', status=200)
 
 
 # Apparently we need to make models for every nested field...
@@ -286,13 +296,14 @@ class GetJoinable(Resource):
         asset_id = args.get("asset_id")
         if asset_id is None:
             return Response("Please provide an asset id as query parameter", status=400)
-
+ 
         table_path = search.io_tools.get_table_path_from_asset_id(asset_id)
-        node = discovery.queries.get_node_by_prop(source_name=table_path)
+        node = discovery.queries.get_node_by_prop(source_path=table_path)
         if len(node) == 0:
             return Response("Table or asset does not exist", status=404)
 
-        return Response(json.dumps({"JoinableTables": discovery.queries.get_joinable(table_path)}),
+        table = search.redis_tools.get_table(table_path)
+        return Response(json.dumps({"JoinableTables": discovery.queries.get_joinable(table)}),
                         mimetype='application/json', status=200)
 
 

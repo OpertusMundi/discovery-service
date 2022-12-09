@@ -116,8 +116,8 @@ def _delete_relation_by_id(tx, relation_id):
 
 
 def _shortest_path_between_tables(tx, from_table, to_table):
-    tx_result = tx.run("match (n {source_name: $from_table}), "
-                       "(m {source_name: $to_table}), "
+    tx_result = tx.run("match (n {source_path: $from_table}), "
+                       "(m {source_path: $to_table}), "
                        "p=shortestPath((n)-[r:RELATED|SIBLING*]-(m)) "
                        "return p", from_table=from_table, to_table=to_table)
 

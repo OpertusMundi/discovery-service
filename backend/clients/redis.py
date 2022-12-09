@@ -20,7 +20,7 @@ def get_client() -> StrictRedis:
 def initialize():
     logging.info("Initializing Redis client...")
     table_schema = (
-        TextField("$.table.path", as_name="path")
+        TextField("$.table.id", as_name="id")
     )
     task_schema = (
         TextField("$.task.id", as_name="id")
