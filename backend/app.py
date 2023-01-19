@@ -306,11 +306,12 @@ class GetJoinable(Resource):
         return Response(json.dumps({"JoinableTables": discovery.queries.get_joinable(table)}),
                         mimetype='application/json', status=200)
 
+DEFAULT_PORT = 8080
 
 if __name__ == "__main__":
     if app.debug:
-        app.run(host='0.0.0.0', port=443)
+        app.run(host='0.0.0.0', port=DEFAULT_PORT)
     else:
         from waitress import serve
-        serve(app, host="0.0.0.0", port=443)
+        serve(app, host="0.0.0.0", port=DEFAULT_PORT)
 

@@ -5,98 +5,157 @@ services:
   rabbitmq:
      image: rabbitmq:3.8
      restart: always
-     env_file:
-        - .env
+     environment:
+       RABBITMQ_DEFAULT_USER:
+       RABBITMQ_DEFAULT_PASS:
+       RABBITMQ_PORT: 5672
      expose:
        - 5672
 
   # Graph database used for discovery
   neo4j:
-    image: neo4j
+    image: neo4j:5.3.0
     expose:
       - 7474
       - 7687
     volumes:
       - neo4jdata:/data
-    env_file:
-      - .env
+    environment:
+      NEO4J_AUTH:
+
+  # Fix ownership of data volumes 
+  fix_data_ownership:
+    image: busybox:1.32
+    command:
+    - chown
+    - -vR
+    - '1000:1000'
+    - /data
+    - /celerydata
+    volumes:
+      - data:/data
+      - celerydata:/celerydata
 
   # API for public access
   api:
-    build: ./backend
+    image: opertusmundi/discovery-backend
+    build: 
+      context: ./backend
+      dockerfile: prod.dockerfile
     ports:
-      - "443:443"
+      - "18080:8080"
     depends_on:
       - neo4j
     volumes:
       - data:/data
-    command:  sh -c "./wait && ./start.sh"
+    command:
+    - python
+    - -m
+    - backend.app
+    user: '1000'
     restart: always
-    tty: true
-    privileged: true
+    #tty: true
+    #privileged: true
     environment:
-      WAIT_HOSTS: neo4j:7474, neo4j:7687
       PYTHONUNBUFFERED: 1
     env_file:
       - .env
 
   # Celery worker that does schema matching jobs
   celery-worker:
-    build: ./backend
+    image: opertusmundi/discovery-backend
+    build: 
+      context: ./backend
+      dockerfile: prod.dockerfile
     volumes:
       - data:/data
     restart: always
-    environment:
+    user: '1000'
+    environment: &celery_environment
       PYTHONUNBUFFERED: 1
-    env_file:
-      - .env
-    command: celery -A backend.celery worker -l INFO --concurrency=1
+      DAISY_PRODUCTION:
+      DATA_INGESTION_INTERVAL:
+      DATA_ROOT_PATH: /data
+      VALENTINE_THRESHOLD:
+      VALENTINE_ROWS_TO_USE:
+      REDIS_HOST:
+      REDIS_PORT:
+      REDIS_PASSWORD:
+      RABBITMQ_HOST:
+      RABBITMQ_PORT:
+      RABBITMQ_DEFAULT_USER:
+      RABBITMQ_DEFAULT_PASS:
+    command: 
+    - celery 
+    - -A 
+    - backend.celery 
+    - worker 
+    - -l 
+    - INFO 
+    - --concurrency=1
     depends_on:
       - rabbitmq
 
-  # Celery beat, used for  scheduling
+  # Celery beat, used for scheduling
   celery-beat:
-    build: ./backend
+    image: opertusmundi/discovery-backend
+    build: 
+      context: ./backend
+      dockerfile: prod.dockerfile
     volumes:
       - data:/data
+      - celerydata:/celerydata
     restart: always
-    environment:
-      PYTHONUNBUFFERED: 1
-    env_file:
-      - .env
-    command: celery -A backend.celery beat -l INFO
+    user: '1000'
+    environment: *celery_environment
+    command: 
+    - celery 
+    - -A 
+    - backend.celery 
+    - beat 
+    - -l 
+    - INFO
+    - -s
+    - /celerydata/celerybeat-schedule 
     depends_on:
       - rabbitmq
 
   # In-memory store with persistence used for storing daisy table metadata and celery task information/statuses
   redis:
-    image: redis/redis-stack-server:latest
+    image: redis/redis-stack-server:6.2.6-v2
     environment:
-      REDIS_ARGS: --maxmemory 512mb --requirepass redis
-    env_file:
-      - .env
+      REDIS_ARGS: >-
+        --maxmemory 512mb
+        --requirepass ${REDIS_PASSWORD}
     expose:
       - 6379
     volumes:
       - redisdata:/data
 
   # Profiler which determines the primary-key foreign-key constraints
+  # FIXME split into containers that start a single process!
   metanome:
-   build: ./metanome
-   expose:
-     - 443
-   volumes:
-     - data:/metanome/backend/WEB-INF/classes/inputData
-   command:  sh -c "./start"
-   restart: always
-   tty: true
-   privileged: true
-   environment:
-     WAIT_HOSTS: neo4j:7474, neo4j:7687
-   env_file:
-     - .env
+    image: opertusmundi/discovery-metanome
+    build: 
+      context: ./metanome
+      dockerfile: Dockerfile
+    expose:
+    - 8090
+    volumes:
+    - data:/metanome/backend/WEB-INF/classes/inputData
+    command:  sh -c "./start"
+    restart: always
+    # FIXME remove tty,privileged requirements 
+    #tty: true
+    #privileged: true
+    user: '1000'
+    #environment:
+      #WAIT_HOSTS: neo4j:7474, neo4j:7687
+    env_file:
+      - .env
 
 volumes:
   neo4jdata:
   redisdata:
+  celerydata:
   data:

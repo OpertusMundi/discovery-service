@@ -78,4 +78,5 @@ def run_binder():
         return Response("Metanome result file timeout", status=500)
 
 
-app.run(host='0.0.0.0', port=443)
+DEFAULT_PORT = 8090
+app.run(host='0.0.0.0', port=DEFAULT_PORT)

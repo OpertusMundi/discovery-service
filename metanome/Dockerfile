@@ -1,14 +1,8 @@
 FROM openjdk:11-jre-slim-buster
 
 # Install deps
-RUN apt-get clean
-RUN apt-get update --fix-missing
-RUN apt-get install -y unzip
-RUN apt-get install -y wget
-RUN apt-get install -y python3
-RUN apt-get install -y screen
-RUN apt-get install -y python3-pip
-
+RUN apt-get clean && apt-get update --fix-missing \
+  && apt-get install -y unzip wget python3 screen python3-pip
 
 # Install python deps
 COPY ./requirements.txt /requirements.txt
