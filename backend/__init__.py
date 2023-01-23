@@ -17,7 +17,7 @@ api = Api(app)
 celery = Celery(app.name, broker_url=f"amqp://{os.environ['RABBITMQ_DEFAULT_USER']}:"
                                      f"{os.environ['RABBITMQ_DEFAULT_PASS']}@"
                                      f"{os.environ['RABBITMQ_HOST']}:"
-                                     f"{os.environ['RABBITMQ_PORT']}/",
+                                     f"{os.environ['RABBITMQ_PORT']}/{os.environ.get('RABBITMQ_VHOST', '')}",
                 backend=f"redis://:{os.environ['REDIS_PASSWORD']}@"
                         f"{os.environ['REDIS_HOST']}:"
                         f"{os.environ['REDIS_PORT']}/0",
