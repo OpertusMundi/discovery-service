@@ -1,4 +1,7 @@
 # Discovery service 
+
+[![Build Status](https://ci.dev-1.opertusmundi.eu:9443/api/badges/OpertusMundi/discovery-service/status.svg?ref=refs/heads/main)](https://ci.dev-1.opertusmundi.eu:9443/OpertusMundi/discovery-service)
+
 #### Part of the value-added services suite for Topio
 
 The discovery service is an application for dataset discovery with 3 components:
