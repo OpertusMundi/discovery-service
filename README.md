@@ -14,10 +14,12 @@ The default value is `60` **seconds**.
 ## Requirements
 The entire project is containerised, therefore the only requirement is `Docker`
 
+## API Documentation
+
+You can browse the full [OpenAPI documentation](https://opertusmundi.github.io/discovery-service/).
 
 ## How to run/use
 The discovery service is available for both development and production. 
-
 
 
 ### Environment variables
@@ -29,7 +31,6 @@ The environement varibles can be found in `.env-default`
 - `DATA_INGESTION_INTERVAL` - The time interval in SECONDS for starting the auto-ingest pipeline. 
 The time interval should reflect how often new data is uploaded/received. 
 - `DATA_ROOT_PATH` - The location of the datasets 
-
 
 
 ### Running
