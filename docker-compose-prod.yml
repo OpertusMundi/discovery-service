@@ -16,10 +16,10 @@ services:
   neo4j:
     image: neo4j:5.3.0
     expose:
-      - 7474
-      - 7687
+    - 7474
+    - 7687
     volumes:
-      - neo4jdata:/data
+    - neo4jdata:/data
     environment:
       NEO4J_AUTH:
 
@@ -33,8 +33,8 @@ services:
     - /data
     - /celerydata
     volumes:
-      - data:/data
-      - celerydata:/celerydata
+    - data:/data
+    - celerydata:/celerydata
 
   # API for public access
   api:
@@ -43,35 +43,16 @@ services:
       context: ./backend
       dockerfile: prod.dockerfile
     ports:
-      - "18080:8080"
-    depends_on:
-      - neo4j
+    - "18080:8080"
     volumes:
-      - data:/data
+    - data:/data:ro
     command:
     - python
     - -m
     - backend.app
     user: '1000'
     restart: always
-    #tty: true
-    #privileged: true
-    environment:
-      PYTHONUNBUFFERED: 1
-    env_file:
-      - .env
-
-  # Celery worker that does schema matching jobs
-  celery-worker:
-    image: opertusmundi/discovery-backend
-    build: 
-      context: ./backend
-      dockerfile: prod.dockerfile
-    volumes:
-      - data:/data
-    restart: always
-    user: '1000'
-    environment: &celery_environment
+    environment: &backend_env
       PYTHONUNBUFFERED: 1
       DAISY_PRODUCTION:
       DATA_INGESTION_INTERVAL:
@@ -86,6 +67,23 @@ services:
       RABBITMQ_DEFAULT_USER:
       RABBITMQ_DEFAULT_PASS:
       RABBITMQ_VHOST:
+      NEO4J_AUTH:
+      NEO4J_ADDRESS:
+      METANOME_API_ADDRESS:
+    depends_on:
+    - neo4j
+
+  # Celery worker that does schema matching jobs
+  celery-worker:
+    image: opertusmundi/discovery-backend
+    build: 
+      context: ./backend
+      dockerfile: prod.dockerfile
+    volumes:
+    - data:/data:ro
+    restart: always
+    user: '1000'
+    environment: *backend_env
     command: 
     - celery 
     - -A 
@@ -95,7 +93,9 @@ services:
     - INFO 
     - --concurrency=1
     depends_on:
-      - rabbitmq
+    - rabbitmq
+    - redis
+    - neo4j
 
   # Celery beat, used for scheduling
   celery-beat:
@@ -104,11 +104,10 @@ services:
       context: ./backend
       dockerfile: prod.dockerfile
     volumes:
-      - data:/data
       - celerydata:/celerydata
     restart: always
     user: '1000'
-    environment: *celery_environment
+    environment: *backend_env
     command: 
     - celery 
     - -A 
@@ -119,7 +118,7 @@ services:
     - -s
     - /celerydata/celerybeat-schedule 
     depends_on:
-      - rabbitmq
+    - rabbitmq
 
   # In-memory store with persistence used for storing daisy table metadata and celery task information/statuses
   redis:
@@ -130,9 +129,9 @@ services:
         --maxmemory 512mb
         --requirepass ${REDIS_PASSWORD}
     expose:
-      - 6379
+    - 6379
     volumes:
-      - redisdata:/data
+    - redisdata:/data
 
   # Profiler which determines the primary-key foreign-key constraints
   # FIXME split into containers that start a single process!
