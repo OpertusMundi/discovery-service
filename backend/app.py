@@ -12,7 +12,6 @@ from backend import api
 # Import own modules
 from backend import app
 from backend.discovery.queries import delete_spurious_connections, get_related_between_two_tables
-from backend.profiling.metanome import profile_metanome
 from backend.utility.celery_tasks import *
 from backend.utility.celery_utils import generate_status_tree
 from backend.utility.display import log_format
@@ -99,21 +98,6 @@ class Purge(Resource):
         db.purge()
         discovery.crud.delete_all_nodes()
         return Response('Success', status=200)
-
-
-# TODO: Implement the algorithm for PK-FK and remove metanome
-@api.route('/profile-metanome')
-@api.doc(
-    description="Runs Metanome profiling for all tables, which is used to obtain KFK relations between the tables.")
-class ProfileMetanome(Resource):
-    @api.response(200, 'Success')
-    @api.response(500, 'Cannot connect to Metanome')
-    def get(self):
-        try:
-            profile_metanome()
-            return Response('Success', status=200)
-        except ConnectionError:
-            return Response('Cannot connect to Metanome', status=500)
 
 
 @api.route('/filter-connections')

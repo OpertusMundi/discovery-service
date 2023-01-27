@@ -107,28 +107,6 @@ services:
     volumes:
       - redisdata:/data
 
-  # Profiler which determines the primary-key foreign-key constraints
-  metanome:
-   build: ./metanome
-   expose:
-     - 443
-   ports:
-     - "8080:8080"
-     - "8081:8081"
-     - "444:443"
-   volumes:
-     - ./metanome/src:/src
-     - ./metanome/logs:/logs
-     - ./data:/metanome/backend/WEB-INF/classes/inputData
-   command:  sh -c "./start"
-   restart: always
-   tty: true
-   privileged: true
-   environment:
-     WAIT_HOSTS: neo4j:7474, neo4j:7687
-   env_file:
-     - .env
-
 volumes:
   redisdata:
   neo4jdata:

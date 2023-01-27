@@ -46,9 +46,7 @@ Visit the API Documentation via `localhost:443` once the application is up.
    1. The data should be in the `data` folder and it has to follow this structure:
       `{id}/resources/{file-name}.csv`
    2. This endpoint will take a while to run. The more data to process, the more it will run.
-2. Run `/profile-metanome` endpoint. Blocker task. 
-   1. This endpoint will take a while to run. The more data to process, the more it will run.
-3. Run `/filter-connections` to remove extra edges. 
+2. Run `/filter-connections` to remove extra edges. 
 
 
 ### To remove all the data:
@@ -69,7 +67,6 @@ Visit the API Documentation via `localhost:443` once the application is up.
 - Neo4j: `localhost:7474`
 - Celery Flower: `localhost:5555`
 - Redis: `localhost:8001`
-- Metanome: `localhost: 8080`
 
 
 ## Development 

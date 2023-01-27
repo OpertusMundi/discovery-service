@@ -1,9 +1,0 @@
-{ 
-    "type":"minIOConnection",
-    "id":1,
-    "name":"address; key",
-    "url":"address",
-    "key":"key",
-    "secretKey":"secret",
-    "comment":"empty"
-}

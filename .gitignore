@@ -135,6 +135,5 @@ data/*
 !data/.keep
 backend/src/api/dask-worker-space
 backend/logs/
-metanome/logs/
 backend/src/models
 backend/src/sherlock

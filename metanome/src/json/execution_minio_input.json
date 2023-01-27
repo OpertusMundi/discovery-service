@@ -1,7 +1,0 @@
-{
-    "type":"ConfigurationSettingMinIOInput",
-    "id":1,
-    "object":"object",
-    "bucket":"bucket",
-    "minIOConnection": null
-}
