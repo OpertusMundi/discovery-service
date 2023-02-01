@@ -7,7 +7,7 @@ from celery.app.task import Task
 from backend import celery
 from .. import search, profiling, discovery
 from ..profiling.valentine import match, process_match
-from ..profiling.metanome import profile_metanome
+from ..profiling.ind_finder import find_inclusion_dependencies
 from ..discovery.queries import delete_spurious_connections
 from ..search import io_tools
 from ..search import redis_tools as db
@@ -44,8 +44,8 @@ def ingest_all_new_tables():
                 add_table(table_path)
             for table_path in to_process:
                 profile_valentine_star(table_path)
-            logging.info("Starting Metanome FK profile")
-            profile_metanome()
+                find_inds_star(table_path)
+
             logging.info("Cleaning up...")
             delete_spurious_connections()
         else:
@@ -110,3 +110,24 @@ def profile_valentine_pair(table_path_1: str, table_path_2: str):
     df2 = search.io_tools.get_df(table_path_2, rows=rows_to_use)
     matches = match(df1, df2)
     process_match(table_path_1, table_path_2, matches)
+
+
+@celery.task
+def find_inds_pair(table_path_1: str, table_path_2: str):
+    logging.info(f'Finding INDs between: {table_path_1}, {table_path_2}')
+    find_inclusion_dependencies([table_path_1, table_path_2])
+
+
+@celery.task
+def find_inds_star(table_path: str):
+    all_tables = db.list_tables()
+    for other in all_tables:
+        if table_path != other["path"]:
+            find_inds_pair(table_path, other["path"])
+
+
+@celery.task
+def find_inds_all():
+    all_tables = io_tools.get_tables()
+    for table_path_1, table_path_2 in itertools.combinations(all_tables, r=2):
+        find_inds_pair(table_path_1, table_path_2)

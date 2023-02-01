@@ -133,28 +133,6 @@ services:
     volumes:
     - redisdata:/data
 
-  # Profiler which determines the primary-key foreign-key constraints
-  # FIXME split into containers that start a single process!
-  metanome:
-    image: opertusmundi/discovery-metanome
-    build: 
-      context: ./metanome
-      dockerfile: Dockerfile
-    expose:
-    - 8090
-    volumes:
-    - data:/metanome/backend/WEB-INF/classes/inputData
-    command:  sh -c "./start"
-    restart: always
-    # FIXME remove tty,privileged requirements 
-    #tty: true
-    #privileged: true
-    user: '1000'
-    #environment:
-      #WAIT_HOSTS: neo4j:7474, neo4j:7687
-    env_file:
-      - .env
-
 volumes:
   neo4jdata:
   redisdata:

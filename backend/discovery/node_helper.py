@@ -103,7 +103,7 @@ def _get_siblings(tx, node_id):
 
 
 def _get_joinable(tx, node_id):
-    tx_result = tx.run(f"MATCH (a:Node)-[r:{relation_types.FOREIGN_KEY_METANOME}]-(b:Node) "
+    tx_result = tx.run(f"MATCH (a:Node)-[r:{relation_types.FOREIGN_KEY_IND}]-(b:Node) "
                        "WHERE a.id = $node_id "
                        "RETURN b, r as result", node_id=node_id)
 
