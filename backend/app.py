@@ -24,7 +24,6 @@ TaskIdModel = api.model('TaskId', {'task_id': fields.String, 'type': fields.Stri
 
 
 @api.route('/ingest-data')
-@api.route('/ingest-data')
 @api.doc(description="Ingest all the data present in the data volume.")
 class IngestData(Resource):
     @api.response(202, 'Success, processing in backend', TaskIdModel)
@@ -42,7 +41,7 @@ class IngestData(Resource):
                 logging.info(f"Table {table_path} was already processed!")
 
         task_group = group(*header)
-        profiling_chord = chord(task_group)(profile_valentine_all.si())
+        profiling_chord = chord(task_group)(profile_valentine_all.si() | find_inds_all.si())
         profiling_chord.parent.save()
         db.save_celery_task(profiling_chord.id, profiling_chord.as_tuple())
 
