@@ -1,0 +1,3 @@
+[submodule "jupyterlab-daisy"]
+	path = jupyterlab-daisy
+	url = https://github.com/Archer6621/jupyterlab-daisy
