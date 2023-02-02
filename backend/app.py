@@ -19,7 +19,7 @@ from backend.utility.display import log_format
 from backend.search import redis_tools as db
 
 # Display/logging settings
-logging.basicConfig(format=log_format, level=logging.ERROR)
+logging.basicConfig(format=log_format, level=logging.INFO)
 
 TaskIdModel = api.model('TaskId', {'task_id': fields.String, 'type': fields.String})
 
