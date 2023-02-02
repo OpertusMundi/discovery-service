@@ -14,6 +14,8 @@ from ..search import redis_tools as db
 
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.ERROR)
+
 
 
 # The default class to use for logging exceptions properly and not hang
@@ -29,7 +31,7 @@ class LoggingTask(Task):
 def ingest_all_new_tables():
     paths = search.io_tools.get_tables()
     if not paths:
-        logging.warn(
+        logging.warning(
             "No tables to process, make sure there is data present on the data volume...")
     else:
         to_process = []
@@ -39,7 +41,7 @@ def ingest_all_new_tables():
                 to_process.append(table_path)
 
         if to_process:
-            logging.info(f"Processing new table: {to_process}")
+            logging.info(f"Processing {len(to_process)} new tables")
             for table_path in to_process:
                 add_table(table_path)
             for table_path in to_process:

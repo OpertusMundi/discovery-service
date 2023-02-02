@@ -57,6 +57,7 @@ def get_df(table_path: str, rows=None) -> pd.DataFrame:
         escapechar='\\',
         nrows=rows,
         sep=None,
+        on_bad_lines='skip',
     )
 
     return df

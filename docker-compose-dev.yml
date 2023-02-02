@@ -19,6 +19,9 @@ services:
       - "7687:7687"
     volumes:
       - neo4jdata:/data
+    environment:
+      NEO4J_AUTH:
+      NEO4J_dbms_security_auth__minimum__password__length: 3
     env_file:
       - .env
 
@@ -26,14 +29,13 @@ services:
   api:
     build: ./backend
     ports:
-      - "443:443"
+      - "8080:8080"
     depends_on:
       - neo4j
     volumes:
       - ./backend:/backend
       - ./backend/logs:/logs
       - ./data:/data
-
     command:  sh -c "./wait && watchmedo auto-restart --debug-force-polling -d /backend/app.py -- ./start.sh"
     restart: always
     tty: true
