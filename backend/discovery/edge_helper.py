@@ -102,11 +102,11 @@ def _delete_relations_by_name(tx, relation_name):
 
 
 def _get_related_relations(tx):
-    tx_result = tx.run("match (n)-[r:RELATED]-(m) return [count(r.coma), r] as result")
+    tx_result = tx.run("match (n)-[r:RELATED]-(m) with r.coma as coma, r as relation return count(coma) as coma, relation as result")
 
     result = []
     for record in tx_result:
-        result.append(record['result'])
+        result.append(record.values())
     return result
 
 

@@ -50,7 +50,7 @@ def find_inclusion_dependencies(table_paths: Set[str]) -> None:
         # Check if column fully contains other column
         A_in_B = col_A.isin(col_B)
         if A_in_B.all():
-            logging.info(f"{A}-->{B}")
+            # logging.info(f"{A}-->{B}")
             cands[A].add(B)
 
     # Add the found unary INDs to Neo4J

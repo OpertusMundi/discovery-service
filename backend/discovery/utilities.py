@@ -3,7 +3,7 @@ from typing import List, Dict, Union
 
 from backend.utility.display import log_format
 
-logging.basicConfig(format=log_format, level=logging.INFO)
+logging.basicConfig(format=log_format, level=logging.ERROR)
 
 
 def process_relation(base_table_path: str, base_table_name: str, result: List[Dict[str, str]]) -> List[Dict[str, Union[Dict[str, str], str]]]:

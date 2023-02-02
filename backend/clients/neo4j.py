@@ -9,7 +9,7 @@ def get_client() -> Neo4jDriver:
     global neo4j_client
 
     if neo4j_client is None:
-        address = os.environ["NEO4J_ADDRESS"]
+        address = os.environ["ADDRESS_NEO4J"]
         neo4j_client = GraphDatabase.driver(
             f"neo4j://{address}",
             auth=tuple(os.environ["NEO4J_AUTH"].split("/"))

@@ -5,7 +5,7 @@ import sys
 import pika
 import requests
 
-logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
+logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.ERROR)
 
 sys.path.append("..")
 

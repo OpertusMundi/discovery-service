@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import json
+import logging
 
 from celery import chord, group
 from celery.result import result_from_tuple
@@ -18,7 +19,7 @@ from backend.utility.display import log_format
 from backend.search import redis_tools as db
 
 # Display/logging settings
-logging.basicConfig(format=log_format, level=logging.INFO)
+logging.basicConfig(format=log_format, level=logging.ERROR)
 
 TaskIdModel = api.model('TaskId', {'task_id': fields.String, 'type': fields.String})
 
@@ -129,7 +130,7 @@ class ProfileValentine(Resource):
     def get(self):
         asset_id = request.args.get('asset_id')
 
-        if asset_path:
+        if not asset_id:
             return Response("Missing asset id query parameter", status=400)
 
         table_path = search.io_tools.get_table_path_from_asset_id(asset_id)
