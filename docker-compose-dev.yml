@@ -3,27 +3,26 @@ services:
   
   # Message queue required by Celery for distributed messaging between the workers
   rabbitmq:
-     image: rabbitmq:3.8-management
+     image: rabbitmq:3.8
      restart: always
-     env_file:
-       - .env
-     ports:
-       - "5672:5672"
-       - "15672:15672"
+     environment:
+       RABBITMQ_DEFAULT_USER:
+       RABBITMQ_DEFAULT_PASS:
+       RABBITMQ_PORT: 5672
+     expose:
+       - 5672
 
   # Graph database used for discovery
   neo4j:
-    image: neo4j
-    ports:
-      - "7474:7474"
-      - "7687:7687"
+    image: neo4j:5.3.0
+    expose:
+      - 7474
+      - 7687
     volumes:
       - neo4jdata:/data
     environment:
       NEO4J_AUTH:
       NEO4J_dbms_security_auth__minimum__password__length: 3
-    env_file:
-      - .env
 
   # API for public access
   api:
@@ -40,12 +39,25 @@ services:
     restart: always
     tty: true
     privileged: true
-    environment:
+    environment: &backend_env
       WAIT_HOSTS: neo4j:7474, neo4j:7687
       PYTHONUNBUFFERED: 1
       FLASK_ENV: development
-    env_file:
-      - .env
+      DAISY_PRODUCTION: false
+      DATA_INGESTION_INTERVAL:
+      DATA_ROOT_PATH: /data
+      VALENTINE_THRESHOLD:
+      VALENTINE_ROWS_TO_USE:
+      REDIS_HOST:
+      REDIS_PORT:
+      REDIS_PASSWORD:
+      RABBITMQ_HOST:
+      RABBITMQ_PORT:
+      RABBITMQ_DEFAULT_USER:
+      RABBITMQ_DEFAULT_PASS:
+      RABBITMQ_VHOST:
+      NEO4J_AUTH:
+      NEO4J_ADDRESS:
 
   # Celery worker that does schema matching jobs
   celery-worker:
@@ -54,26 +66,21 @@ services:
       - ./backend:/backend
       - ./data:/data
     restart: always
-    environment:
-      PYTHONUNBUFFERED: 1
-    env_file:
-      - .env
+    environment: *backend_env
     # Polling is required because inotify does not work on subfolders of bind mounts
     command: watchmedo auto-restart --debug-force-polling -d /backend/utility/celery_tasks.py -d /backend/__init__.py -- celery -A backend.celery worker -l INFO --concurrency=1
     depends_on:
       - rabbitmq
+      - redis
+      - neo4j
 
   # Celery beat, used for  scheduling
   celery-beat:
     build: ./backend
     volumes:
-      - ./backend:/backend
-      - ./data:/data
+      - celerydata:/celerydata
     restart: always
-    environment:
-      PYTHONUNBUFFERED: 1
-    env_file:
-      - .env
+    environment: *backend_env
     # Polling is required because inotify does not work on subfolders of bind mounts
     command: watchmedo auto-restart --debug-force-polling -d /backend/utility/celery_tasks.py -d /backend/__init__.py -- celery -A backend.celery beat -l INFO
     depends_on:
@@ -86,12 +93,9 @@ services:
       - ./backend:/backend
     command: "celery -A backend.celery flower --broker_api=http://rabbitmq:rabbitmq@rabbitmq:15672/api/"
     restart: always
-    environment:
-      FLOWER_PORT: 5555
-    env_file:
-      - .env
-    ports:
-      - "5555:5555"
+    environment: *backend_env
+    expose:
+      - 5555
     depends_on:
       - rabbitmq
       - celery-worker
@@ -101,14 +105,13 @@ services:
     image: redis/redis-stack:latest
     environment:
       REDIS_ARGS: --maxmemory 512mb --requirepass redis
-    env_file:
-      - .env
-    ports:
-      - "6379:6379"
-      - "8001:8001"    
+    expose:
+      - 6379
     volumes:
       - redisdata:/data
 
 volumes:
   redisdata:
   neo4jdata:
+  celerydata:
+  data:
