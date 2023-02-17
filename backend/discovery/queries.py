@@ -57,7 +57,6 @@ def get_joinable(table: Dict[str, Any]):
     siblings = process_node(nodes)
     with open(ROOT_FOLDER / 'pids-of-active-assets.txt') as f:
         active_pids = [line.rstrip('\n') for line in f]
-    print(active_pids)
 
     joinable_tables = {}
     for sib in siblings:

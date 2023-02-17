@@ -26,6 +26,12 @@ def get_node(**kwargs):
     return node
 
 
+def get_nodes_path_contains(contained_word):
+    with neo.get_client().session() as session:
+        node = session.write_transaction(_get_nodes_path_contains, contained_word)
+    return node
+
+
 def get_related_nodes(node_id):
     with neo.get_client().session() as session:
         nodes = session.write_transaction(_get_related_nodes, node_id)
@@ -159,6 +165,17 @@ def _get_all(tx):
     for record in result:
         nodes.append(record['nodes'])
     return nodes
+
+
+def _get_nodes_path_contains(tx, contained_word):
+    tx_result = tx.run("match (n) where n.source_path contains $contained_word return count(n), n.source_path as node",
+                       contained_word=contained_word)
+
+    result = []
+    for record in tx_result:
+        result.append(record['node'])
+
+    return result
 
 
 def _get_node(tx, **kwargs):
