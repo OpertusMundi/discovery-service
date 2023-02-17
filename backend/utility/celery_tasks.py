@@ -60,13 +60,14 @@ def add_table(table_path: str):
     Adds a table at the given table path to Daisy's databases.
     """
     table_name = table_path.split('/')[-1]
+    asset_id = table_path.partition("/resources")[0]
     logging.info(f"- Parsing table at {table_path} into DataFrame")
     df = search.io_tools.get_df(table_path)
     # Split the dataframe into a new dataframe for each column
     logging.info(f"- Adding whole table metadata to neo4j for {table_path}")
     nodes = {}
     for col in df.columns:
-        node = discovery.crud.create_node(table_name, table_path, col)
+        node = discovery.crud.create_node(asset_id, table_name, table_path, col)
         node_id = node[0]['id']
         nodes[col] = node_id
 

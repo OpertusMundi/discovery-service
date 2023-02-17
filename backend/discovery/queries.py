@@ -1,4 +1,5 @@
 import logging
+from typing import Dict, Any, List
 
 import numpy as np
 
@@ -7,8 +8,7 @@ from . import node_helper
 from .edge_helper import shortest_path_between_tables
 from .relation_types import MATCH
 from .utilities import process_relation, process_node
-
-from typing import Dict, Any, List
+from ..utility import ROOT_FOLDER
 
 
 def get_nodes():
@@ -33,7 +33,7 @@ def get_related_nodes(node_id: str):
         else:
             nodes_id = list(map(lambda z: z['id'], nodes))
             temp = list(filter(lambda x: x['id']
-                               not in nodes_id, processed_result))
+                                         not in nodes_id, processed_result))
             nodes = nodes + temp
 
         if len(related_nodes) == 0:
@@ -42,7 +42,7 @@ def get_related_nodes(node_id: str):
             nodes_id = list(map(lambda z: z['id'], related_nodes))
             nodes = list(filter(lambda x: x['id'] not in nodes_id, nodes))
             temp = list(filter(lambda x: x['id']
-                               not in nodes_id, processed_result))
+                                         not in nodes_id, processed_result))
             related_nodes = related_nodes + temp
 
     return related_nodes
@@ -55,11 +55,14 @@ def get_joinable(table: Dict[str, Any]):
     nodes = node_helper.get_nodes_by_table_path(table_path)
     # Simplify the object (only keep the table path, column name and column id)
     siblings = process_node(nodes)
+    with open(ROOT_FOLDER / 'pids-of-active-assets.txt') as f:
+        active_pids = [line.rstrip('\n') for line in f]
+    print(active_pids)
 
     joinable_tables = {}
     for sib in siblings:
         # Get all the nodes connected to a sibling via RELATED edge
-        related_nodes = node_helper.get_joinable(sib['id'])
+        related_nodes = node_helper.get_joinable(sib['id'], active_pids)
         logging.info(f"RELATED NODES: {related_nodes}")
         # If the node has connection, transform the result into something useful for us
         # { table_name: {PK: { from_id: <id>, to_id: <id> }, RELATED: <threshold>} ... }
@@ -77,7 +80,8 @@ def get_joinable(table: Dict[str, Any]):
                 joinable_tables[related_table_path]["table_path"] = related_table_path
             logging.info(joinable_tables[related_table_path]["matches"])
             joinable_tables[related_table_path]["matches"] = list(
-                sorted(joinable_tables[related_table_path]["matches"], key=lambda x: -x["RELATED"]["coma"] if "coma" in x["RELATED"] else 0))
+                sorted(joinable_tables[related_table_path]["matches"],
+                       key=lambda x: -x["RELATED"]["coma"] if "coma" in x["RELATED"] else 0))
 
     joinable_tables_sorted = sorted(list(joinable_tables.values()), key=lambda x: (
         -len(x["matches"]), -np.mean([x["RELATED"]["coma"] if "coma" in x["RELATED"] else 0 for x in x["matches"]])))

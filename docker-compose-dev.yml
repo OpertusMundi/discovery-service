@@ -18,6 +18,9 @@ services:
     expose:
       - 7474
       - 7687
+    ports:
+      - "7474:7474"
+      - "7687:7687"
     volumes:
       - neo4jdata:/data
     environment:
