@@ -280,15 +280,19 @@ class GetJoinable(Resource):
         asset_id = args.get("asset_id")
         if asset_id is None:
             return Response("Please provide an asset id as query parameter", status=400)
- 
-        table_path = search.io_tools.get_table_path_from_asset_id(asset_id)
-        node = discovery.queries.get_node_by_prop(source_path=table_path)
-        if len(node) == 0:
+
+        nodes = discovery.node_helper.get_nodes_path_contains(asset_id)
+        if len(nodes) == 0:
             return Response("Table or asset does not exist", status=404)
 
-        table = search.redis_tools.get_table(table_path)
-        return Response(json.dumps({"JoinableTables": discovery.queries.get_joinable(table)}),
+        joinable_tables = []
+        for node in nodes:
+            table = search.redis_tools.get_table(node)
+            joinable_tables.extend(discovery.queries.get_joinable(table))
+
+        return Response(json.dumps({"JoinableTables": joinable_tables}),
                         mimetype='application/json', status=200)
+
 
 DEFAULT_PORT = 8080
 

@@ -2,8 +2,8 @@ from . import edge_helper
 from . import node_helper
 
 
-def create_node(table_name, table_path, column_name):
-    return node_helper.create_node(table_name, table_path, column_name)
+def create_node(asset_id, table_name, table_path, column_name):
+    return node_helper.create_node(asset_id, table_name, table_path, column_name)
 
 
 def get_nodes():

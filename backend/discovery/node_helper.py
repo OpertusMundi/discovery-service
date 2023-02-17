@@ -2,9 +2,9 @@ from . import relation_types
 from ..clients import neo4j as neo
 
 
-def create_node(source, source_path, label):
+def create_node(asset_id, source, source_path, label):
     with neo.get_client().session() as session:
-        node = session.write_transaction(_create_node, source, source_path, label)
+        node = session.write_transaction(_create_node, asset_id, source, source_path, label)
     return node
 
 
@@ -26,15 +26,21 @@ def get_node(**kwargs):
     return node
 
 
+def get_nodes_path_contains(contained_word):
+    with neo.get_client().session() as session:
+        node = session.write_transaction(_get_nodes_path_contains, contained_word)
+    return node
+
+
 def get_related_nodes(node_id):
     with neo.get_client().session() as session:
         nodes = session.write_transaction(_get_related_nodes, node_id)
     return nodes
 
 
-def get_joinable(node_id):
+def get_joinable(node_id, filter_pids):
     with neo.get_client().session() as session:
-        nodes = session.write_transaction(_get_joinable, node_id)
+        nodes = session.write_transaction(_get_joinable, node_id, filter_pids)
     return nodes
 
 
@@ -102,10 +108,11 @@ def _get_siblings(tx, node_id):
     return result
 
 
-def _get_joinable(tx, node_id):
+def _get_joinable(tx, node_id, filter_pids):
     tx_result = tx.run(f"MATCH (a:Node)-[r:{relation_types.FOREIGN_KEY_IND}]-(b:Node) "
-                       "WHERE a.id = $node_id "
-                       "RETURN b, r as result", node_id=node_id)
+                       "WHERE a.id = $node_id AND "
+                       "b.asset_id in $filter_pids "
+                       "RETURN b, r as result", node_id=node_id, filter_pids=filter_pids)
 
     result = []
     for record in tx_result:
@@ -123,13 +130,14 @@ def _get_related_nodes(tx, node_id):
     return result
 
 
-def _create_node(tx, source, source_path, label):
+def _create_node(tx, asset_id, source, source_path, label):
     tx_result = tx.run("CREATE (n:Node) "
                        "SET n.id = $source_path + '/' + $label, "
                        "n.name = $label, "
                        "n.source_name = $source, "
-                       "n.source_path = $source_path "
-                       "RETURN n as node", source=source, label=label, source_path=source_path)
+                       "n.source_path = $source_path, "
+                       "n.asset_id = $asset_id "
+                       "RETURN n as node", asset_id=asset_id, source=source, label=label, source_path=source_path)
     result = []
     for record in tx_result:
         result.append(record['node'])
@@ -157,6 +165,17 @@ def _get_all(tx):
     for record in result:
         nodes.append(record['nodes'])
     return nodes
+
+
+def _get_nodes_path_contains(tx, contained_word):
+    tx_result = tx.run("match (n) where n.source_path contains $contained_word return count(n), n.source_path as node",
+                       contained_word=contained_word)
+
+    result = []
+    for record in tx_result:
+        result.append(record['node'])
+
+    return result
 
 
 def _get_node(tx, **kwargs):

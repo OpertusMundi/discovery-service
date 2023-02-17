@@ -29,7 +29,7 @@ def process_relation(base_table_path: str, base_table_name: str, result: List[Di
             explanation = f"{explanation} via the primary-key foreign-key constraint: PK - {relation['from_id']} and " \
                           f"FK - {relation['to_id']}"
         if "coma" in relation:
-            table["RELATED"] = {'coma': relation['coma']}
+            table["RELATED"] = {'coma': float(relation['coma'])}
             explanation = f"{explanation} with a confidence threshold of {relation['coma']} (1.0 being the best score)"
         else:
             table["RELATED"] = {}
