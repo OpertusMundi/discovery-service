@@ -61,7 +61,7 @@ def get_joinable(table: Dict[str, Any]):
     siblings = process_node(nodes)
     with open(ROOT_FOLDER / 'pids-of-active-assets.txt') as f:
         active_pids = [line.rstrip('\n') for line in f]
-    print(f"Active pids: {len(active_pids)}")
+    print(f"Active pids: {len(active_pids)} \n {active_pids}")
     joinable_tables = {}
     for sib in siblings:
         # Get all the nodes connected to a sibling via RELATED edge

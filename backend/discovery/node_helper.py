@@ -109,6 +109,7 @@ def _get_siblings(tx, node_id):
 
 
 def _get_joinable(tx, node_id, filter_pids):
+    print(filter_pids)
     tx_result = tx.run(f"MATCH (a:Node)-[r:{relation_types.FOREIGN_KEY_IND}]-(b:Node) "
                        "WHERE a.id = $node_id AND "
                        "b.asset_id in $filter_pids "
