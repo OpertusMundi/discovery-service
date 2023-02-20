@@ -287,6 +287,7 @@ class GetJoinable(Resource):
 
         joinable_tables = []
         for node in nodes:
+            print(f"Asset id: {node}")
             table = search.redis_tools.get_table(node)
             joinable_tables.extend(discovery.queries.get_joinable(table))
 

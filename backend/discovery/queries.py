@@ -9,6 +9,10 @@ from .edge_helper import shortest_path_between_tables
 from .relation_types import MATCH
 from .utilities import process_relation, process_node
 from ..utility import ROOT_FOLDER
+from ..utility.display import log_format
+
+
+logging.basicConfig(format=log_format, level=logging.INFO)
 
 
 def get_nodes():
@@ -57,12 +61,12 @@ def get_joinable(table: Dict[str, Any]):
     siblings = process_node(nodes)
     with open(ROOT_FOLDER / 'pids-of-active-assets.txt') as f:
         active_pids = [line.rstrip('\n') for line in f]
-
+    print(f"Active pids: {len(active_pids)}")
     joinable_tables = {}
     for sib in siblings:
         # Get all the nodes connected to a sibling via RELATED edge
         related_nodes = node_helper.get_joinable(sib['id'], active_pids)
-        logging.info(f"RELATED NODES: {related_nodes}")
+        print(f"Sibling: {sib['id']}\n\tRELATED NODES: {len(related_nodes)}")
         # If the node has connection, transform the result into something useful for us
         # { table_name: {PK: { from_id: <id>, to_id: <id> }, RELATED: <threshold>} ... }
         if len(related_nodes) > 0:
@@ -77,7 +81,7 @@ def get_joinable(table: Dict[str, Any]):
                     related_table)
                 joinable_tables[related_table_path]["table_name"] = related_table_name
                 joinable_tables[related_table_path]["table_path"] = related_table_path
-            logging.info(joinable_tables[related_table_path]["matches"])
+            # print(len(joinable_tables[related_table_path]["matches"]))
             joinable_tables[related_table_path]["matches"] = list(
                 sorted(joinable_tables[related_table_path]["matches"],
                        key=lambda x: -x["RELATED"]["coma"] if "coma" in x["RELATED"] else 0))
