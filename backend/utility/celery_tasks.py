@@ -96,7 +96,7 @@ def profile_valentine_star(table_path: str):
     """
     Profiles all other tables against the table at the given path.
     """
-    all_tables = db.list_tables()
+    all_tables = io_tools.get_tables()
     for other in all_tables:
         if table_path != other["path"]:
             profile_valentine_pair(table_path, other["path"])
@@ -123,7 +123,7 @@ def find_inds_pair(table_path_1: str, table_path_2: str):
 
 @celery.task
 def find_inds_star(table_path: str):
-    all_tables = db.list_tables()
+    all_tables = io_tools.get_tables()
     for other in all_tables:
         if table_path != other["path"]:
             find_inds_pair(table_path, other["path"])
