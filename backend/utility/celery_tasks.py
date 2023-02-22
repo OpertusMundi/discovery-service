@@ -98,8 +98,8 @@ def profile_valentine_star(table_path: str):
     """
     all_tables = io_tools.get_tables()
     for other in all_tables:
-        if table_path != other["path"]:
-            profile_valentine_pair(table_path, other["path"])
+        if table_path != other:
+            profile_valentine_pair(table_path, other)
 
 
 @celery.task
