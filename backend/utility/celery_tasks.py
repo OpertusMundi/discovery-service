@@ -125,8 +125,8 @@ def find_inds_pair(table_path_1: str, table_path_2: str):
 def find_inds_star(table_path: str):
     all_tables = io_tools.get_tables()
     for other in all_tables:
-        if table_path != other["path"]:
-            find_inds_pair(table_path, other["path"])
+        if table_path != other:
+            find_inds_pair(table_path, other)
 
 
 @celery.task
