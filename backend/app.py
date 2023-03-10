@@ -233,22 +233,30 @@ class GetRelatedNodes(Resource):
         if source_asset_id in target_asset_ids:
             return Response("Source asset id should not be in target asset ids", status=403)
 
-        from_table_path = search.io_tools.get_table_path_from_asset_id(source_asset_id)
-        from_table = search.redis_tools.get_table(from_table_path)
-        node = discovery.queries.get_node_by_prop(source_path=from_table_path)
-        if len(node) == 0:
-            return Response("Table does not exist", status=404)
+        source_nodes = discovery.node_helper.get_nodes_path_contains(source_asset_id)
+        if len(source_nodes) == 0:
+            return Response("Table or asset does not exist", status=404)
 
         related_tables = []
-        for asset_id in target_asset_ids:
-            logging.info(f"Processing {asset_id}")
-            to_table_path = search.io_tools.get_table_path_from_asset_id(asset_id)
-            to_table = search.redis_tools.get_table(to_table_path)
-            node = discovery.queries.get_node_by_prop(source_path=to_table_path)
-            if len(node) > 0:
-                related_tables += get_related_between_two_tables(from_table, to_table)
-            else:
-                logging.warning(f"Given asset '{asset_id}' does not exist")
+
+        for source in source_nodes:
+            print(f"From asset id: {source}")
+            from_table = search.redis_tools.get_table(source)
+
+            for asset_id in target_asset_ids:
+                logging.info(f"Processing {asset_id}")
+                target_nodes = discovery.node_helper.get_nodes_path_contains(asset_id)
+
+                if len(target_nodes) == 0:
+                    logging.warning(f"Given asset '{asset_id}' does not exist")
+                    continue
+
+                for target in target_nodes:
+                    to_table = search.redis_tools.get_table(target)
+                    if to_table is None:
+                        continue
+                    related_tables += get_related_between_two_tables(from_table, to_table)
+
         return Response(json.dumps({"RelatedTables": related_tables}), mimetype='application/json', status=200)
 
 
