@@ -301,7 +301,6 @@ class GetJoinable(Resource):
                 continue
             joinable_tables.extend(discovery.queries.get_joinable(table))
 
-        print(joinable_tables)
         return Response(json.dumps({"JoinableTables": joinable_tables}),
                         mimetype='application/json', status=200)
 
