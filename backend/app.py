@@ -297,8 +297,11 @@ class GetJoinable(Resource):
         for node in nodes:
             logging.info(f"Asset id: {node}")
             table = search.redis_tools.get_table(node)
+            if table is None:
+                continue
             joinable_tables.extend(discovery.queries.get_joinable(table))
 
+        print(joinable_tables)
         return Response(json.dumps({"JoinableTables": joinable_tables}),
                         mimetype='application/json', status=200)
 
